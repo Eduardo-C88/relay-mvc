@@ -1,10 +1,11 @@
-import express from "express";
-//import authRoutes from './routes/authRoutes';
+const express = require('express');
+const routes = require('./routes/authRoutes');
+
+require('dotenv').config();
 
 const app = express();
-
 app.use(express.json());
-// Import user routes
-//app.use('/api/users/', require('./routes/userRoutes'));
 
-export default app;
+app.use('/api/auth', routes);
+
+module.exports = app;

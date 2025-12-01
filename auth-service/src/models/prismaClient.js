@@ -1,5 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
-export default prisma;
+// We export an object { prisma } so your service can destructure it
+module.exports = { prisma };
