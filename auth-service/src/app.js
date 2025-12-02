@@ -1,9 +1,11 @@
 const express = require('express');
-const routes = require('./routes/authRoutes');
 const bodyParser = require('body-parser');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('../static/swagger/swagger.json');
+
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 require('dotenv').config();
 
@@ -17,6 +19,7 @@ app.use('/', express.static(path.join(__dirname, '../static')));
 app.use('/doc', express.static(path.join(__dirname, '../static/doc')));
 app.use('/apidoc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.use('/api/auth', routes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
  
 module.exports = app;

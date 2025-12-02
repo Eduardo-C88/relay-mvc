@@ -56,3 +56,63 @@ exports.login = async ({ email, password }) => {
     return { accessToken: token, refreshToken: refreshToken }
 };
     
+
+exports.refreshToken = async (oldRefreshToken) => {
+
+    // Verify the refresh token
+    let payload;
+    try {
+        payload = jwt.verify(oldRefreshToken, process.env.REFRESH_JWT_SECRET);
+    } catch (err) {
+        throw new Error('Invalid refresh token');
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: payload.id } });
+    if (!user) {
+        // If the user was deleted but the token wasn't, revoke the token
+        await prisma.refreshToken.delete({ where: { token: oldRefreshToken } });
+        throw new Error('Invalid refresh token');
+    }
+
+    // Check if the refresh token exists in DB
+    const storedToken = await prisma.refreshToken.findUnique({ where: { token: oldRefreshToken } });
+    if (!storedToken) {
+        throw new Error('Invalid refresh token'); 
+    }
+    // Generate new tokens
+    const newPayload = { id: user.id, email: user.email };
+    const newAccessToken = jwt.sign(newPayload, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const newRefreshToken = jwt.sign(newPayload, process.env.REFRESH_JWT_SECRET, { expiresIn: '7d' });
+    // Store new refresh token and delete old one in a transaction
+    await prisma.$transaction([
+        prisma.refreshToken.delete({ where: { token: oldRefreshToken } }),
+        prisma.refreshToken.create({
+            data: {
+                token: newRefreshToken,
+                userId: payload.id,
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+            }
+        })
+    ]);
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+}
+
+exports.logout = async (refreshToken) => {
+    try {
+        // Use delete and specify the unique token field for deletion
+        await prisma.refreshToken.delete({ 
+            where: { token: refreshToken } 
+        });
+    } catch (error) {
+        // If the token wasn't found (P2025 error code), we can ignore it 
+        // because the goal (token revoked) is already achieved, or log it.
+        if (error.code === 'P2025') {
+            // Optional: Log that a non-existent token was requested for logout
+            console.warn('Logout requested for non-existent or already-revoked token.');
+            return; 
+        }
+        // Re-throw any actual database errors
+        throw error;
+    }
+    return;
+}
