@@ -18,5 +18,5 @@ app.use('/doc', express.static(path.join(__dirname, '../static/doc')));
 app.use('/apidoc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use('/api/auth', routes);
-
+ 
 module.exports = app;
