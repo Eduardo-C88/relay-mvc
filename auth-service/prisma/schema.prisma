@@ -8,35 +8,35 @@ datasource db {
 }
 
 model User {
-  id              Int      @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   name            String
-  email           String   @unique
+  email           String    @unique
   password        String
   reputation      Int?      @default(75)
   address         String?
   latitude        Float?
   longitude       Float?
   courseId        Int?
-  course          Course?   @relation(fields: [courseId], references: [id])
+  course          Course?     @relation(fields: [courseId], references: [id])
   universityId    Int?
   university      University? @relation(fields: [universityId], references: [id])
-  roleId          Int?
-  role            Role? @relation(fields: [roleId], references: [id])
-  createdAt       DateTime @default(now())
+  roleId          Int?        @default(1)
+  role            Role?       @relation(fields: [roleId], references: [id])
+  createdAt       DateTime    @default(now())
   refreshTokens    RefreshToken[]
 }
 
 model Course {
-  id              Int     @id @default(autoincrement())
-  name            String  @unique
+  id              Int         @id @default(autoincrement())
+  name            String      @unique
   universityId    Int?
   university      University? @relation(fields: [universityId], references: [id])
   users           User[]
 }
 
 model University {
-  id              Int     @id @default(autoincrement())
-  name            String  @unique
+  id              Int         @id @default(autoincrement())
+  name            String      @unique
   location        String?
   website         String?
   users           User[]

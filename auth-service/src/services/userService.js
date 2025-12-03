@@ -11,6 +11,7 @@ exports.getUserProfile = async (userId) => {
             address: true, 
             course: { select: { id: true, name: true } },
             university: { select: { id: true, name: true } },
+            role: { select: { id: true, name: true } },
             createdAt: true,
         }
     });

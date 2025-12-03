@@ -192,6 +192,15 @@ exports.changePassword = async (req, res) => {
     }
 }
 
+/** * @api {delete} /api/auth/deleteAccount Delete user account
+ * @apiName DeleteAccount
+ * @apiGroup Auth
+ * @apiHeader {String} Authorization Bearer token.
+ * @apiSuccessExample {json} Success-Response:
+ *    HTTP/1.1 204 No Content
+ * @apiError (401) Unauthorized Invalid or missing token.
+ * @apiError (500) InternalServerError Server error.
+ */
 exports.deleteAccount = async (req, res) => {
     try {
         const userId = req.user.id;

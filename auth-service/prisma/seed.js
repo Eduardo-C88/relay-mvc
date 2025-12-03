@@ -61,6 +61,17 @@ async function main() {
     });
 
     console.log(`Created courses: ${course_ai.name}, ${course_softeng.name}`);
+
+    // Create roles
+    const roles = ['STUDENT', 'MODERATOR', 'ADMIN'];
+    for (const roleName of roles) {
+        await prisma.role.upsert({
+            where: { name: roleName },
+            update: {},
+            create: { name: roleName },
+        });
+        console.log(`Upserted role: ${roleName}`);
+    }
 }
 
 // Execute the main function and handle errors

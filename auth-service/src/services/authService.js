@@ -5,7 +5,6 @@ const jwt = require('jsonwebtoken');
 exports.register = async ({ name, email, password }) => {
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
-
     if (existingUser) {
         throw { status: 400, message: 'User with this email already exists' };
     }
@@ -39,7 +38,7 @@ exports.login = async ({ email, password }) => {
     }
 
     // Generate JWT token
-    const payload = { id: user.id, email: user.email };
+    const payload = { id: user.id, email: user.email, roleId: user.roleId };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
     const refreshToken = jwt.sign(payload, process.env.REFRESH_JWT_SECRET, { expiresIn: '7d' });
@@ -80,7 +79,7 @@ exports.refreshToken = async (oldRefreshToken) => {
         throw new Error('Invalid refresh token'); 
     }
     // Generate new tokens
-    const newPayload = { id: user.id, email: user.email };
+    const newPayload = { id: user.id, email: user.email, roleId: user.roleId };
     const newAccessToken = jwt.sign(newPayload, process.env.JWT_SECRET, { expiresIn: '1h' });
     const newRefreshToken = jwt.sign(newPayload, process.env.REFRESH_JWT_SECRET, { expiresIn: '7d' });
     // Store new refresh token and delete old one in a transaction

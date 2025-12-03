@@ -1,5 +1,26 @@
 const userService = require('../services/userService');
 
+/** * @api {get} /api/users/me Get authenticated user's profile
+ * @apiName GetUserProfile
+ * @apiGroup Users
+ * @apiHeader {String} Authorization Bearer token.
+ * @apiSuccess {Object} user User profile data.
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *      "id": 1,
+ *      "name": "John Doe",
+ *      "email": "test@email.com",
+ *      "reputation": 100,
+ *      "address": "123 Main St",
+ *      "course": { "id": 2, "name": "Computer Science" },
+ *      "university": { "id": 1, "name": "Tech University" },
+ *      "role": { "id": 1, "name": "User" },
+ *      "createdAt": "2024-01-01T00:00:00.000Z"
+ *     }
+ * @apiError (401) Unauthorized Invalid or missing token.
+ * @apiError (500) InternalServerError Server error.
+ */
 exports.getUserProfile = async (req, res) => {
     try {
         // Get the ID from the payload attached by the middleware (req.user)
@@ -19,6 +40,26 @@ exports.getUserProfile = async (req, res) => {
     }
 };
 
+/** * @api {put} /api/users/me Update authenticated user's profile
+ * @apiName UpdateUserProfile
+ * @apiGroup Users
+ * @apiHeader {String} Authorization Bearer token.
+ * @apiParam {String} [address] User's address.
+ * @apiParam {Number} [courseId] ID of the user's course.
+ * @apiParam {Number} [universityId] ID of the user's university.
+ * @apiSuccess {Object} user Updated user profile data.
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *    {
+ *     "address": "456 New St",
+ *    "course": { "id": 3, "name": "Mathematics" },
+ *    "university": { "id": 2, "name": "Science University" },
+ *    "reputation": 100
+ *    }
+ * @apiError (400) BadRequest Invalid input data.
+ * @apiError (401) Unauthorized Invalid or missing token.
+ * @apiError (500) InternalServerError Server error.
+ */
 exports.updateUserProfile = async (req, res) => {
     try {
         const userId = req.user.id; 
