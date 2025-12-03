@@ -39,7 +39,7 @@ exports.register = async (req, res) => {
 
     try {
         // Pass 'name' correctly
-        const user = await authService.register({ name: username, email, password });
+        const user = await authService.register({ name, email, password });
         // SUCCESS: Send a concise response
         return res.status(201).json({ 
             id: user.id, 
@@ -147,6 +147,58 @@ exports.logout = async (req, res) => {
     } catch (error) {
         // Use the error object in the log for better debugging context
         console.error('Logout failed due to server/DB issue:', error); 
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+}
+
+/** * @api {post} /api/auth/changePassword Change user password
+ * @apiName ChangePassword
+ * @apiGroup Auth
+ * @apiHeader {String} Authorization Bearer token.
+ * @apiParam {String} currentPassword User's current password.
+ * @apiParam {String} newPassword User's new password.
+ * @apiSuccess {String} message Success message.
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     { "message": "Password changed successfully." }
+ * @apiError (400) BadRequest Missing or invalid parameters.
+ * @apiError (401) Unauthorized Invalid or missing token.
+ * @apiError (500) InternalServerError Server error.
+ */
+exports.changePassword = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: 'Current and new passwords are required.' });
+        }
+
+        await authService.changePassword(userId, currentPassword, newPassword);
+        return res.status(200).json({ message: 'Password changed successfully.' });
+    } catch (error) {
+        if (error.message === 'Current password is incorrect') {
+            // 400 Bad Request: Invalid input credential
+            return res.status(400).json({ message: error.message }); 
+        }
+        
+        // Although rare in this flow, handle if the service couldn't find the user.
+        if (error.message === 'User not found') {
+            // 404 Not Found (or 401/403 if you prefer, as it implies bad auth state)
+            return res.status(404).json({ message: error.message }); 
+        }
+        
+        console.error('Error changing password:', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+}
+
+exports.deleteAccount = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        await authService.deleteAccount(userId);
+        return res.status(204).send();
+    } catch (error) {
+        console.error('Error deleting account:', error);
         return res.status(500).json({ message: 'Internal Server Error' });
     }
 }

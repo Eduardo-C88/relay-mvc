@@ -116,3 +116,35 @@ exports.logout = async (refreshToken) => {
     }
     return;
 }
+
+exports.changePassword = async (userId, currentPassword, newPassword) => {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+        throw new Error('User not found');
+    }
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+        throw new Error('Current password is incorrect');
+    }
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+        where: { id: userId },
+        data: { password: hashedNewPassword }
+    });
+    // Revoke all refresh tokens for this user
+    await prisma.refreshToken.deleteMany({
+        where: { userId: userId }
+    });
+    return;
+}
+
+exports.deleteAccount = async (userId) => {
+    // Delete user and cascade delete refresh tokens
+    await prisma.refreshToken.deleteMany({
+        where: { userId: userId }
+    });
+    await prisma.user.delete({
+        where: { id: userId }
+    });
+    return;
+}

@@ -12,7 +12,7 @@ model User {
   name            String
   email           String   @unique
   password        String
-  reputation      Int?      @default(50)
+  reputation      Int?      @default(75)
   address         String?
   latitude        Float?
   longitude       Float?
@@ -28,7 +28,7 @@ model User {
 
 model Course {
   id              Int     @id @default(autoincrement())
-  name            String
+  name            String  @unique
   universityId    Int?
   university      University? @relation(fields: [universityId], references: [id])
   users           User[]
@@ -36,7 +36,7 @@ model Course {
 
 model University {
   id              Int     @id @default(autoincrement())
-  name            String
+  name            String  @unique
   location        String?
   website         String?
   users           User[]
