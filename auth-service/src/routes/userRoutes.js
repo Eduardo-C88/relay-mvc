@@ -8,5 +8,6 @@ const roleMiddleware = require('../middleware/roleMiddleware');
 router.use(authMiddleware.authenticateToken);
 router.get('/me', userController.getUserProfile);
 router.put('/me', userController.updateUserProfile);
+router.put('/:id/role', roleMiddleware.authorizeRole([3]), userController.changeUserRole);
 
 module.exports = router;

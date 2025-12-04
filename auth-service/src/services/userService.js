@@ -52,3 +52,24 @@ exports.updateUserProfile = async (userId, updateData) => {
     });
     return updatedUser;
 }
+
+exports.changeUserRole = async (userId, roleId) => {
+    // Validate the roleId exists
+    const roleExists = await prisma.role.findUnique({
+        where: { id: roleId }
+    });
+    if (!roleExists) {
+        throw new Error('Role ID does not exist.');
+    }
+    const updatedUser = await prisma.user.update({
+        where: { id: parseInt(userId) },
+        data: { roleId },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            role: { select: { id: true, name: true } },
+        }
+    });
+    return updatedUser;
+}

@@ -103,3 +103,38 @@ exports.updateUserProfile = async (req, res) => {
         return res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
+exports.changeUserRole = async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id); // Target user ID
+        const { roleId } = req.body;            // New role ID from the body
+        
+        // Input validation: Ensure roleId is provided and is a number
+        if (!roleId || typeof roleId !== 'number' || roleId <= 0) {
+            return res.status(400).json({ message: 'A valid roleId must be provided in the request body.' });
+        }
+        
+        const updatedUser = await userService.changeUserRole(userId, roleId);
+        
+        // Handle case where target user ID does not exist
+        if (!updatedUser) {
+             return res.status(404).json({ message: `User with ID ${userId} not found.` });
+        }
+        
+        return res.status(200).json(updatedUser);
+    } catch (error) {
+        // Handle custom service errors
+        if (error.message === 'Role ID does not exist.') {
+            return res.status(400).json({ message: error.message });
+        }
+        
+        // Handle Prisma errors (e.g., if the user ID doesn't exist)
+        if (error.code === 'P2025') {
+             // P2025 is a "not found" error, specifically for the where clause
+            return res.status(404).json({ message: `User with ID ${req.params.id} not found.` });
+        }
+
+        console.error('Error changing user role:', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
