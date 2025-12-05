@@ -8,14 +8,13 @@
 // •    GET /resources/requests/:id → detalhe de um pedido
 
 const express = require('express');
-const { prisma } = require('../models/prismaClient');
 const resourcesController = require('../controllers/resourcesController');
-const authMiddleware = require('../middlewares/authMiddleware');
-const roleMiddleware = require('../middlewares/roleMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
+const roleMiddleware = require('../middleware/roleMiddleware');
 
 const router = express.Router();
 
 router.use(authMiddleware.authenticateToken);
-router.post('/resources')
+router.post('/createResource', resourcesController.createResource);
 
 module.exports = router;
