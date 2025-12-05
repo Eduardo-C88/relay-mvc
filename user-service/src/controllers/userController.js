@@ -138,3 +138,46 @@ exports.changeUserRole = async (req, res) => {
         return res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
+// exports.addUniversity = async (req, res) => {
+//     try {
+//         // Only pull the fields you expect. Missing fields will be undefined.
+//         const { name, location, website } = req.body;
+
+//         if (!name || !location) {
+//             return res.status(400).json({ message: 'Name and location are required' });
+//         }
+
+//         // Pass the object directly to the service
+//         const newUniversity = await referenceService.addUniversity({ name, location, website });
+//         return res.status(201).json(newUniversity);
+//     } catch (error) {
+//         // Check for the custom status property from the service
+//         if (error.status === 409) {
+//             return res.status(409).json({ message: error.message });
+//         }
+
+//         console.error('Error adding university:', error);
+//         return res.status(500).json({ message: 'Internal Server Error' });
+//     }
+// };
+
+// exports.addCourse = async (req, res) => {
+//     try {
+//         const { name, universityId } = req.body;  
+//         if (!name || !universityId) {
+//             return res.status(400).json({ message: 'Name and universityId are required' });
+//         }
+
+//         const newCourse = await userService.addCourse({ name, universityId });
+//         return res.status(201).json(newCourse);
+//     } catch (error) {
+//         // Check for the custom status property from the service
+//         if (error.status === 409) {
+//             return res.status(409).json({ message: error.message });
+//         }
+
+//         console.error('Error adding university:', error);
+//         return res.status(500).json({ message: 'Internal Server Error' });
+//     }   
+// };

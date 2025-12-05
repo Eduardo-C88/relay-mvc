@@ -10,4 +10,7 @@ router.get('/me', userController.getUserProfile);
 router.put('/me', userController.updateUserProfile);
 router.put('/:id/role', roleMiddleware.authorizeRole([3]), userController.changeUserRole);
 
+// router.post('/addUni', roleMiddleware.authorizeRole([2, 3]), userController.addUniversity);
+// router.post('/addCourse', roleMiddleware.authorizeRole([2, 3]), userController.addCourse);
+
 module.exports = router;

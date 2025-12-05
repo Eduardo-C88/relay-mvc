@@ -73,3 +73,35 @@ exports.changeUserRole = async (userId, roleId) => {
     });
     return updatedUser;
 }
+
+// exports.addUniversity = async (uniData) => {
+//     try{
+//         const newUniversity = await prisma.university.create({
+//             data: uniData // Pass the object directly
+//         });
+//         return newUniversity;
+//     } catch (error) {
+//         // Handle P2002: Unique constraint violation (University already exists)
+//         if (error.code === 'P2002' && error.meta?.target.includes('name')) {
+//             // Throw a specific error for the controller to catch
+//             throw { status: 409, message: 'University with this name already exists.' };
+//         }
+//         // Re-throw other errors (like database connection issues)
+//         throw error;
+//     }
+// }
+
+// exports.addCourse = async (courseData) => {
+//     try{
+//         const newCourse = await prisma.course.create({
+//             data: courseData
+//         });
+//         return newCourse;
+//     } catch (error) {
+//         // Handle P2002: Unique constraint violation (Course already exists)
+//         if (error.code === 'P2002' && error.meta?.target.includes('name')) {
+//             throw { status: 409, message: 'Course with this name already exists.' };
+//         }
+//         throw error;
+//     }
+// }
