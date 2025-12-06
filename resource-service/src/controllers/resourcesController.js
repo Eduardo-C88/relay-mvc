@@ -135,3 +135,54 @@ exports.deleteResource = async (req, res) => {
       return res.status(500).json({ error: "Failed to delete resource due to server error" });
   }
 };
+
+exports.getAllResources = async (req, res) => {
+  try {
+      const resources = await resourceService.getAllResources();
+      res.status(200).json(resources);
+    } catch (error) {
+      console.error("Failed to fetch resources:", error); 
+      res.status(500).json({ error: "Failed to fetch resources" });
+  }
+};
+
+exports.getResourceById = async (req, res) => {
+  const resourceId = req.params.id;
+  try {
+      const resource = await resourceService.getResourceById(resourceId);
+      if (!resource) {
+          return res.status(404).json({ error: "Resource not found" });
+      }
+      res.status(200).json(resource);
+} catch (error) {
+        // Log the actual error for debugging
+        console.error("Failed to fetch resources:", error); 
+        res.status(500).json({ error: "Failed to fetch resources" });
+    }
+};
+
+exports.filterResources = async (req, res) => {
+  try {
+    const filters = req.query;
+    const filteredResources = await resourceService.filterResources(filters);
+    res.status(200).json(filteredResources);
+  } catch (error) {
+    console.error("Failed to filter resources:", error);
+    res.status(500).json({ error: "Failed to filter resources" });
+  }
+};
+
+// Higher-order functions
+exports.createCategory = async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: "Category name is required" });
+    }
+    const newCategory = await resourceService.createCategory({ name, description });
+    res.status(201).json(newCategory);
+  }
+  catch (error) {
+    res.status(500).json({ error: "Failed to create category" });
+  }
+};

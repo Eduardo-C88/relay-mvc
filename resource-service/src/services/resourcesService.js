@@ -65,3 +65,80 @@ exports.deleteResource = async (resourceId) => {
         throw error;
     }  
 };
+
+exports.getAllResources = async () => {
+    return await prisma.resource.findMany({
+        select: {
+            title: true,
+            price: true,
+            imageUrl: true,
+        }
+    });
+}
+
+exports.getResourceById = async (resourceId) => {
+    const resource = await prisma.resource.findUnique({
+        where: { id: parseInt(resourceId) },
+        select: {
+            title: true,
+            description: true,
+            price: true,
+            imageUrl: true,
+            category: true,
+            status: true,
+            ownerId: true
+        }
+    });
+    return resource;
+};
+
+const parseFilterInt = (value) => {
+    if (value === undefined || value === null || value === '') {
+        return NaN;
+    }
+    return parseInt(value);
+};
+
+exports.filterResources = async (filters) => {
+    // Build dynamic where clause based on provided filters
+    const whereClause = {};
+
+    // Use explicit checks for existence and validity (e.g., ensure it's not an empty string)
+    const categoryId = parseFilterInt(filters.categoryId);
+    if (!isNaN(categoryId)) {
+        whereClause.categoryId = categoryId;
+    }
+    
+    const priceMax = parseFilterInt(filters.priceMax);
+    if (!isNaN(priceMax)) {
+        whereClause.price = { lte: priceMax };
+    }
+    
+    const statusId = parseFilterInt(filters.statusId);
+    if (!isNaN(statusId)) {
+        whereClause.statusId = statusId;
+    }
+
+    const ownerId = parseFilterInt(filters.ownerId);
+    if (!isNaN(ownerId)) {
+        whereClause.ownerId = ownerId;
+    }
+
+    const filteredResources = await prisma.resource.findMany({
+        where: whereClause,
+        select: {
+            title: true,
+            price: true,
+            imageUrl: true,
+        }
+    });
+    return filteredResources;
+};
+
+// Higher-order functions
+exports.createCategory = async (data) => {
+    const newCategory = await prisma.category.create({
+        data: data
+    });
+    return newCategory;
+}

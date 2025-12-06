@@ -15,8 +15,14 @@ const roleMiddleware = require("../middleware/roleMiddleware");
 const router = express.Router();
 
 router.use(authMiddleware.authenticateToken);
-router.post("/createResource", resourcesController.createResource);
-router.put("/editResource/:id", resourcesController.editResource);
-router.delete("/deleteResource/:id", resourcesController.deleteResource);
+router.post("/create", resourcesController.createResource);
+router.put("/edit/:id", resourcesController.editResource);
+router.delete("/delete/:id", resourcesController.deleteResource);
+router.get("/all", resourcesController.getAllResources);
+router.get("/filter", resourcesController.filterResources);
+router.get("/:id", resourcesController.getResourceById);
+
+// Higher privileged routes can have additional role checks
+router.post("/createCategory", roleMiddleware.authorizeRole([2, 3]), resourcesController.createCategory);
 
 module.exports = router;
