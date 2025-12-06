@@ -17,5 +17,6 @@ const router = express.Router();
 router.use(authMiddleware.authenticateToken);
 router.post("/createResource", resourcesController.createResource);
 router.put("/editResource/:id", resourcesController.editResource);
+router.delete("/deleteResource/:id", resourcesController.deleteResource);
 
 module.exports = router;

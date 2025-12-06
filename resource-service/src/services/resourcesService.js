@@ -48,3 +48,20 @@ exports.editResource = async (resourceId, data) => {
         throw error;
     }
 };
+
+exports.deleteResource = async (resourceId) => {
+    try {
+        await prisma.resource.delete({
+            where: { id: parseInt(resourceId) }
+        });
+    } catch (error) {
+        // Prisma error code P2025 indicates "Record to delete not found."
+        if (error.code === 'P2025') {
+            const notFoundError = new Error('Resource not found');
+            notFoundError.statusCode = 404;
+            throw notFoundError;
+        }
+        // Re-throw any other unexpected error
+        throw error;
+    }  
+};

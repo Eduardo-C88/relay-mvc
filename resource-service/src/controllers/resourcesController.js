@@ -91,3 +91,47 @@ exports.editResource = async (req, res) => {
       res.status(500).json({ error: 'Failed to edit resource due to server error' });
   }
 };
+
+exports.deleteResource = async (req, res) => {
+  const resourceId = req.params.id;
+  const currentUserId = req.user.id;
+  const currentUserRoleId = req.user.roleId; // <--- Assume this is passed by auth middleware
+
+  try {
+      const existingResource = await resourceService.getResourceOwner(resourceId);
+
+      if (!existingResource) {
+          return res.status(404).json({ error: "Resource not found" });
+      }
+      
+      // --- IMPROVED AUTHORIZATION CHECK ---
+      const isOwner = existingResource.ownerId === currentUserId;
+      const isAdminOrModerator = 
+          currentUserRoleId === 3 || 
+          currentUserRoleId === 2;
+
+      // Allow deletion if the user is the owner OR a privileged role
+      if (!isOwner && !isAdminOrModerator) {
+           return res
+              .status(403)
+              .json({ error: "Forbidden: You do not have permission to delete this resource" });
+      }
+
+      // Proceed to delete the resource
+      await resourceService.deleteResource(resourceId);
+      
+      // Use 204 No Content for a successful deletion
+      return res.status(204).send();
+
+  } catch (error) {
+      // Log the error for server-side inspection
+      console.error('Resource deletion failed:', error); 
+      
+      // Ensure you also handle the specific 404 error from the Service layer (if applicable)
+      if (error.statusCode === 404) {
+           return res.status(404).json({ error: error.message });
+      }
+
+      return res.status(500).json({ error: "Failed to delete resource due to server error" });
+  }
+};
