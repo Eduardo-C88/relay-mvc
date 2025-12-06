@@ -7,14 +7,15 @@
 // •    GET /resources/requests → listar pedidos feitos por utilizadores
 // •    GET /resources/requests/:id → detalhe de um pedido
 
-const express = require('express');
-const resourcesController = require('../controllers/resourcesController');
-const authMiddleware = require('../middleware/authMiddleware');
-const roleMiddleware = require('../middleware/roleMiddleware');
+const express = require("express");
+const resourcesController = require("../controllers/resourcesController");
+const authMiddleware = require("../middleware/authMiddleware");
+const roleMiddleware = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
 router.use(authMiddleware.authenticateToken);
-router.post('/createResource', resourcesController.createResource);
+router.post("/createResource", resourcesController.createResource);
+router.put("/editResource/:id", resourcesController.editResource);
 
 module.exports = router;
