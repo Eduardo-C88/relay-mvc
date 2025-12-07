@@ -72,6 +72,7 @@ exports.getAllResources = async () => {
             title: true,
             price: true,
             imageUrl: true,
+            owner: true
         }
     });
 }
@@ -112,11 +113,6 @@ exports.filterResources = async (filters) => {
     const priceMax = parseFilterInt(filters.priceMax);
     if (!isNaN(priceMax)) {
         whereClause.price = { lte: priceMax };
-    }
-    
-    const statusId = parseFilterInt(filters.statusId);
-    if (!isNaN(statusId)) {
-        whereClause.statusId = statusId;
     }
 
     const ownerId = parseFilterInt(filters.ownerId);

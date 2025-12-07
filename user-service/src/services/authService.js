@@ -1,6 +1,7 @@
 const { prisma } = require('../models/prismaClient');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { publishUserCreated } = require("../events/userPublisher");
 
 exports.register = async ({ name, email, password }) => {
     // Check if user already exists
@@ -18,6 +19,15 @@ exports.register = async ({ name, email, password }) => {
             email,
             password: hashedPassword,
         }
+    });
+
+    // Publish UserCreated event
+    publishUserCreated({
+        userId: newUser.id,
+        name: newUser.name,
+        reputation: newUser.reputation,
+        university: newUser.university?.name,
+        course: newUser.course?.name,
     });
     
     // Do not return the password hash!

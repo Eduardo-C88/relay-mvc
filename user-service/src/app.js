@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('../static/swagger/swagger.json');
+const { connectRabbitMQ } = require("./utils/rabbitmq");
+const { initUserPublisher } = require("./events/userPublisher");
 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -18,6 +20,12 @@ app.use('/', express.static(path.join(__dirname, '../static')));
 //access api documentation
 app.use('/doc', express.static(path.join(__dirname, '../static/doc')));
 app.use('/apidoc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Connect to RabbitMQ
+(async () => {
+    const channel = await connectRabbitMQ();
+    await initUserPublisher(channel);
+})();
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

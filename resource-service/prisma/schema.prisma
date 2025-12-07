@@ -10,6 +10,7 @@ datasource db {
 model Resource {
   id          Int       @id @default(autoincrement())
   ownerId     Int
+  owner       UserProfile? @relation(fields: [ownerId], references: [id])
   title       String
   categoryId  Int
   category    Category  @relation(fields: [categoryId], references: [id])
@@ -19,6 +20,15 @@ model Resource {
   price       Float?
   imageUrl    String?
   createdAt   DateTime  @default(now())
+}
+
+model UserProfile {
+  id        Int     @id
+  name      String?
+  reputation Int?
+  university String?
+  course    String?
+  resources Resource[]
 }
 
 model Request {

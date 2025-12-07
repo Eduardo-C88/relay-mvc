@@ -1,4 +1,5 @@
 const { prisma } = require('../models/prismaClient');
+const { publishUserUpdated } = require("../events/userPublisher");
 
 exports.getUserProfile = async (userId) => {
     const user = await prisma.user.findUnique({
@@ -42,6 +43,8 @@ exports.updateUserProfile = async (userId, updateData) => {
         where: { id: userId },
         data: updateData,
         select: {
+            id: true,
+            name: true,
             address: true,
             // Include related models for a complete response
             course: { select: { id: true, name: true } },
@@ -50,6 +53,15 @@ exports.updateUserProfile = async (userId, updateData) => {
             reputation: true,
         }
     });
+    // Publish user updated event
+    publishUserUpdated({
+        userId,
+        name: updatedUser.name,
+        reputation: updatedUser.reputation,
+        university: updatedUser.university?.name,
+        course: updatedUser.course?.name
+      });
+
     return updatedUser;
 }
 
@@ -71,37 +83,12 @@ exports.changeUserRole = async (userId, roleId) => {
             role: { select: { id: true, name: true } },
         }
     });
+
+    // Publish user updated event
+    publishUserUpdated({
+        userId: updatedUser.id,
+        name: updatedUser.name,
+        role: updatedUser.role.name,
+    });
     return updatedUser;
 }
-
-// exports.addUniversity = async (uniData) => {
-//     try{
-//         const newUniversity = await prisma.university.create({
-//             data: uniData // Pass the object directly
-//         });
-//         return newUniversity;
-//     } catch (error) {
-//         // Handle P2002: Unique constraint violation (University already exists)
-//         if (error.code === 'P2002' && error.meta?.target.includes('name')) {
-//             // Throw a specific error for the controller to catch
-//             throw { status: 409, message: 'University with this name already exists.' };
-//         }
-//         // Re-throw other errors (like database connection issues)
-//         throw error;
-//     }
-// }
-
-// exports.addCourse = async (courseData) => {
-//     try{
-//         const newCourse = await prisma.course.create({
-//             data: courseData
-//         });
-//         return newCourse;
-//     } catch (error) {
-//         // Handle P2002: Unique constraint violation (Course already exists)
-//         if (error.code === 'P2002' && error.meta?.target.includes('name')) {
-//             throw { status: 409, message: 'Course with this name already exists.' };
-//         }
-//         throw error;
-//     }
-// }
