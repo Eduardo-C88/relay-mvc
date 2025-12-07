@@ -22,6 +22,17 @@ services:
       - "5433:5432"
     volumes:
       - ./sql/resource_init.sql:/docker-entrypoint-initdb.d/init.sql
+  transaction_db:
+    image: postgres:16
+    container_name: transaction-mvc-prisma-db
+    environment:
+      POSTGRES_USER: transaction_user
+      POSTGRES_PASSWORD: transaction_password
+      POSTGRES_DB: transaction_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./sql/transaction_init.sql:/docker-entrypoint-initdb.d/init.sql
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq

@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("TRANSACTION_DATABASE_URL")
+}
+
+model Purchases {
+  id            Int       @id @default(autoincrement())
+  buyerId       Int
+  resourceId    Int
+  sellerId      Int
+  agreedPrice  Float
+  statusId     Int
+  status      Status    @relation(fields: [statusId], references: [id])
+  createdAt     DateTime  @default(now())
+}
+
+model Borrowings {
+  id            Int       @id @default(autoincrement())
+  borrowerId    Int
+  resourceId    Int
+  ownerId      Int
+  statusId     Int
+  status      Status    @relation(fields: [statusId], references: [id])
+  startDate    DateTime
+  endDate      DateTime
+  createdAt     DateTime  @default(now())
+}
+
+model Status{
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  purchases Purchases[]
+}

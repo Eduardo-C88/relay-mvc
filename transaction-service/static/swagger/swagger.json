@@ -1,0 +1,260 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "title": "User Authentication API",
+      "version": "1.0.0",
+      "description": "API for user registration, login, authentication, token refresh, logout, profile management and deletion."
+    },
+    "basePath": "/",
+    "schemes": ["http"],
+    "consumes": ["application/json"],
+    "produces": ["application/json"],
+  
+    "paths": {
+      "/api/users/register": {
+        "post": {
+          "tags": ["User"],
+          "summary": "Register new user",
+          "description": "Create a new user account",
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/RegisterUser"
+              }
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "User registered successfully",
+              "schema": {
+                "$ref": "#/definitions/MessageResponse"
+              }
+            },
+            "400": { "description": "Missing fields or invalid data" },
+            "500": { "description": "Internal server error" }
+          }
+        }
+      },
+  
+      "/api/users/login": {
+        "post": {
+          "tags": ["User"],
+          "summary": "User login",
+          "description": "Authenticates user and returns JWT tokens",
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "required": true,
+              "schema": { "$ref": "#/definitions/LoginUser" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Login successful",
+              "schema": { "$ref": "#/definitions/LoginResponse" }
+            },
+            "400": { "description": "Missing credentials" },
+            "401": { "description": "Invalid username or password" },
+            "500": { "description": "Internal server error" }
+          }
+        }
+      },
+  
+      "/api/users/refreshToken": {
+        "post": {
+          "tags": ["User"],
+          "summary": "Refresh access token",
+          "description": "Generates a new access token from a refresh token",
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "required": true,
+              "schema": { "$ref": "#/definitions/RefreshTokenRequest" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "New access token",
+              "schema": { "$ref": "#/definitions/AccessTokenResponse" }
+            },
+            "401": { "description": "Refresh token is required" },
+            "403": { "description": "Invalid or expired refresh token" }
+          }
+        }
+      },
+  
+      "/api/users/logout": {
+        "delete": {
+          "tags": ["User"],
+          "summary": "Logout user",
+          "description": "Invalidates refresh token and updates user activity",
+          "parameters": [
+            {
+              "in": "header",
+              "name": "Authorization",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "body",
+              "required": true,
+              "schema": { "$ref": "#/definitions/RefreshTokenRequest" }
+            }
+          ],
+          "responses": {
+            "204": { "description": "Logged out successfully" },
+            "400": { "description": "Missing refresh token or not authenticated" },
+            "500": { "description": "Internal server error" }
+          }
+        }
+      },
+  
+      "/api/users/editProfile": {
+        "patch": {
+          "tags": ["User"],
+          "summary": "Edit user profile",
+          "description": "Updates user profile fields",
+          "parameters": [
+            {
+              "in": "header",
+              "name": "Authorization",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "body",
+              "schema": { "$ref": "#/definitions/EditProfileRequest" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Profile updated successfully",
+              "schema": { "$ref": "#/definitions/UpdatedUserResponse" }
+            },
+            "404": { "description": "User not found" },
+            "500": { "description": "Internal server error" }
+          }
+        }
+      },
+  
+      "/api/users/deleteUser": {
+        "delete": {
+          "tags": ["User"],
+          "summary": "Delete user account",
+          "description": "Deletes authenticated user's account",
+          "parameters": [
+            {
+              "in": "header",
+              "name": "Authorization",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User deleted successfully",
+              "schema": { "$ref": "#/definitions/MessageResponse" }
+            },
+            "404": { "description": "User not found" },
+            "500": { "description": "Internal server error" }
+          }
+        }
+      }
+    },
+  
+    "definitions": {
+      "RegisterUser": {
+        "type": "object",
+        "required": ["username", "password", "email"],
+        "properties": {
+          "username": { "type": "string" },
+          "password": { "type": "string" },
+          "email": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "birthDate": { "type": "string", "format": "date" },
+          "userPhoto": { "type": "string" }
+        }
+      },
+  
+      "LoginUser": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": { "type": "string" },
+          "password": { "type": "string" }
+        }
+      },
+  
+      "RefreshTokenRequest": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string" }
+        }
+      },
+  
+      "EditProfileRequest": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" },
+          "email": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "userPhoto": { "type": "string" }
+        }
+      },
+  
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string" },
+          "refreshToken": { "type": "string" }
+        }
+      },
+  
+      "AccessTokenResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string" }
+        }
+      },
+  
+      "UpdatedUserResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" },
+          "user": { "$ref": "#/definitions/UserObject" }
+        }
+      },
+  
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" }
+        }
+      },
+  
+      "UserObject": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "username": { "type": "string" },
+          "email": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "birthDate": { "type": "string", "format": "date" },
+          "userPhoto": { "type": "string" },
+          "lastAccess": { "type": "string", "format": "date-time" },
+          "activity": { "type": "number" }
+        }
+      }
+    }
+  }
+  
