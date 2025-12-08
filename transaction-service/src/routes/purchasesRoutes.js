@@ -13,22 +13,22 @@ router.post("/:purchaseId/approve", purchasesController.approveTransaction);
 // Seller rejects
 router.post("/:id/reject", purchasesController.rejectTransaction);
 // // Complete transaction (buyer confirms receipt)
-// router.post("/:id/complete", purchasesController.completeTransaction);
+router.post("/:id/complete", purchasesController.completeTransaction);
 
 // Get own purchases for a user
 router.get("/history", purchasesController.getPurchasesHistory);
 
 // Get all purchases for a user as moderator/admin
-//router.get(
-//  "/:id/history",
-//  roleMiddleware.authorizeRole([2, 3]),
-//  purchasesController.getUserPurchases
-//);
+router.get(
+  "/:id/history",
+  roleMiddleware.authorizeRole([2, 3]),
+  purchasesController.getUserPurchases
+);
 // Get all purchases (admin/moderator)
-//router.get(
-//  "/all",
-//  roleMiddleware.authorizeRole([2, 3]),
-//  purchasesController.getAllPurchases
-//);
+router.get(
+  "/all",
+  roleMiddleware.authorizeRole([2, 3]),
+  purchasesController.getAllPurchases
+);
 
 module.exports = router;

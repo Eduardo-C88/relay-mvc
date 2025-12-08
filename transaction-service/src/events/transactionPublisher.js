@@ -49,8 +49,26 @@ async function onTransactionRejected(data) {
   console.log("Event TransactionRejected published:", data);
 }
 
+/**
+ * Publica evento de transação completada.
+ * @param {Object} data - Dados da transação completada.
+ *   { transactionId, itemId, completedBy }
+ */
+async function onTransactionCompleted(data) {
+  if (!channel) {
+    throw new Error("TransactionPublisher not initialized");
+  }
+
+  await channel.assertQueue("TransactionCompleted"); // fila específica para conclusão
+  const message = Buffer.from(JSON.stringify(data));
+
+  channel.sendToQueue("TransactionCompleted", message);
+  console.log("Event TransactionCompleted published:", data);
+}
+
 module.exports = {
   initTransactionPublisher,
   onTransactionApproved,
   onTransactionRejected,
+  onTransactionCompleted,
 };
