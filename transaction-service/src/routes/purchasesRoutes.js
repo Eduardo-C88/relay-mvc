@@ -1,7 +1,7 @@
-const express = require('express');
-const purchasesController = require('../controllers/purchasesController');
-const authMiddleware = require('../middleware/authMiddleware');
-const roleMiddleware = require('../middleware/roleMiddleware');
+const express = require("express");
+const purchasesController = require("../controllers/purchasesController");
+const authMiddleware = require("../middleware/authMiddleware");
+const roleMiddleware = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
@@ -19,8 +19,16 @@ router.post("/:id/reject", purchasesController.rejectTransaction);
 router.get("/history", purchasesController.getPurchasesHistory);
 
 // Get all purchases for a user as moderator/admin
-router.get("/:id/history", roleMiddleware.authorizeRole([2, 3]), purchasesController.getUserPurchases);
+router.get(
+  "/:id/history",
+  roleMiddleware.authorizeRole([2, 3]),
+  purchasesController.getUserPurchases
+);
 // Get all purchases (admin/moderator)
-router.get("/all", roleMiddleware.authorizeRole([2, 3]), purchasesController.getAllPurchases);
+router.get(
+  "/all",
+  roleMiddleware.authorizeRole([2, 3]),
+  purchasesController.getAllPurchases
+);
 
 module.exports = router;
