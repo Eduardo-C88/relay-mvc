@@ -29,6 +29,6 @@ app.use('/apidoc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 })();
 
 // app.use Routes
-app.use('/api/resources', resourcesRoutes);
+app.use(resourcesRoutes);
  
 module.exports = app;
