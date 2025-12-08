@@ -97,19 +97,103 @@ exports.rejectTransaction = async (transactionId, currentUserId) => {
   return updatedTransaction;
 };
 
+exports.completeTransaction = async (transactionId, currentUserId) => {
+  //Buscar transação + item
+  const transaction = await prisma.purchases.findUnique({
+    where: { id: transactionId },
+    include: { item: true },
+  });
+
+  if (!transaction) throw new Error("Transaction not found");
+
+  //Verifica se o status é APPROVED (statusId = 5)
+  if (transaction.statusId !== 5)
+    throw new Error("Only APPROVED transactions can be completed");
+
+  //Atualiza transação + item de forma atômica
+  const [updatedTransaction] = await prisma.$transaction([
+    prisma.purchases.update({
+      where: { id: transactionId },
+      data: {
+        statusId: 6, // COMPLETED
+        completedAt: new Date(),
+      },
+    }),
+    prisma.items.update({
+      where: { id: transaction.itemId },
+      data: {
+        isAvailable: false,
+        isForSale: false,
+      },
+    }),
+  ]);
+
+  //Dispara evento
+  purchaseEvents.onTransactionCompleted({
+    transactionId: updatedTransaction.id,
+    itemId: transaction.item.id,
+    completedBy: currentUserId,
+  });
+
+  return updatedTransaction;
+};
+
 exports.getPurchasesHistory = async (userId) => {
-  // 1. Buscar todas as compras do utilizador (buyerId) no Prisma
+  //Buscar todas as compras do utilizador (buyerId) no Prisma
   const purchases = await prisma.purchases.findMany({
     where: { buyerId: userId },
     include: { item: true }, // incluir dados do item
     orderBy: { createdAt: "desc" }, // mais recentes primeiro
   });
 
-  // 2. Se não houver compras, lançar erro (opcional)
+  //Se não houver compras, lançar erro (opcional)
   if (purchases.length === 0) {
     throw new Error("No purchase history found");
   }
 
-  // 3. Retornar histórico
+  //Retornar histórico
+  return purchases;
+};
+
+exports.getUserBorrowings = async (userId) => {
+  const borrowings = await prisma.borrowings.findMany({
+    where: { borrowerId: userId }, // busca empréstimos pelo ID do usuário
+    include: { item: true }, // inclui dados do item associado
+    orderBy: { createdAt: "desc" }, // mais recentes primeiro
+  });
+
+  // Caso não haja empréstimos
+  if (borrowings.length === 0)
+    throw new Error("No borrowings found for this user");
+
+  return borrowings;
+};
+
+exports.getUserPurchases = async (userId) => {
+  // Buscar todas as compras do usuário pelo ID
+  const purchases = await prisma.purchases.findMany({
+    where: { buyerId: userId },
+    include: { item: true }, // incluir dados do item
+    orderBy: { createdAt: "desc" }, // mais recentes primeiro
+  });
+
+  // Se não houver compras, lançar erro
+  if (purchases.length === 0) {
+    throw new Error("No purchases found for this user");
+  }
+  // Retornar as compras
+  return purchases;
+};
+
+exports.getAllPurchases = async () => {
+  // Buscar todas as compras no sistema
+  const purchases = await prisma.purchases.findMany({
+    include: { item: true }, // incluir dados do item
+    orderBy: { createdAt: "desc" }, // mais recentes primeiro
+  });
+  // Verificar se há compras
+  if (!purchases || purchases.length === 0)
+    throw new Error("No purchases found");
+
   return purchases;
 };

@@ -70,6 +70,30 @@ exports.rejectTransaction = async (req, res) => {
   }
 };
 
+exports.completeTransaction = async (req, res) => {
+  try {
+    const purchaseId = parseInt(req.params.purchaseId);
+
+    const transaction = await purchasesService.completeTransaction(
+      purchaseId,
+      req.user.id
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Transaction completed",
+      data: transaction,
+    });
+  } catch (error) {
+    console.error("Error completing transaction:", error);
+
+    return res.status(400).json({
+      success: false,
+      error: error.message || "Failed to complete transaction",
+    });
+  }
+};
+
 exports.getPurchasesHistory = async (req, res) => {
   try {
     //Buscar o ID do comprador a partir do utilizador autenticado
@@ -92,6 +116,44 @@ exports.getPurchasesHistory = async (req, res) => {
     return res.status(400).json({
       success: false,
       error: error.message || "Failed to retrieve purchases history",
+    });
+  }
+};
+
+exports.getUserPurchases = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id); // ID do usuário passado na URL
+
+    const purchases = await purchasesService.getUserPurchases(userId);
+
+    return res.status(200).json({
+      success: true,
+      message: "User purchases retrieved",
+      data: purchases,
+    });
+  } catch (error) {
+    console.error("Error retrieving user purchases:", error);
+
+    return res.status(400).json({
+      success: false,
+      error: error.message || "Failed to retrieve user purchases",
+    });
+  }
+};
+
+exports.getAllPurchases = async (req, res) => {
+  try {
+    const purchases = await purchasesService.getAllPurchases();
+    return res.status(200).json({
+      success: true,
+      message: "All purchases retrieved",
+      data: purchases,
+    });
+  } catch (error) {
+    console.error("Error retrieving all purchases:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || "Failed to retrieve all purchases",
     });
   }
 };
