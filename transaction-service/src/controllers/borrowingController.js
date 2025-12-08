@@ -1,7 +1,5 @@
 const borrowingService = require("../services/borrowingService");
 
-const borrowingService = require("../services/borrowingService");
-
 exports.createBorrow = async (req, res) => {
   try {
     const borrowingData = {
