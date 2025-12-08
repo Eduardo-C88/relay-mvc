@@ -27,7 +27,7 @@ app.use('/apidoc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     await initUserPublisher(channel);
 })();
 
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
+app.use(authRoutes);
+app.use(userRoutes);
  
 module.exports = app;
