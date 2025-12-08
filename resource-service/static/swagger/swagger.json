@@ -1,260 +1,235 @@
 {
-    "swagger": "2.0",
-    "info": {
-      "title": "User Authentication API",
-      "version": "1.0.0",
-      "description": "API for user registration, login, authentication, token refresh, logout, profile management and deletion."
-    },
-    "basePath": "/",
-    "schemes": ["http"],
-    "consumes": ["application/json"],
-    "produces": ["application/json"],
-  
-    "paths": {
-      "/api/users/register": {
-        "post": {
-          "tags": ["User"],
-          "summary": "Register new user",
-          "description": "Create a new user account",
-          "parameters": [
-            {
-              "in": "body",
-              "name": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/RegisterUser"
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Resource Service API",
+    "version": "1.0.0",
+    "description": "API documentation for resource and category management."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3002",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    { "name": "Resources", "description": "Resource management endpoints" },
+    { "name": "Categories", "description": "Category management endpoints" }
+  ],
+  "paths": {
+    "/api/resources": {
+      "post": {
+        "summary": "Create a new resource",
+        "tags": ["Resources"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateResourceRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Resource created",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Resource" } }
+            }
+          },
+          "400": { "description": "Missing title or categoryId" },
+          "500": { "description": "Failed to create resource" }
+        }
+      },
+      "get": {
+        "summary": "Get all resources",
+        "tags": ["Resources"],
+        "responses": {
+          "200": {
+            "description": "A list of resources",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Resource" }
+                }
               }
             }
-          ],
-          "responses": {
-            "201": {
-              "description": "User registered successfully",
-              "schema": {
-                "$ref": "#/definitions/MessageResponse"
-              }
-            },
-            "400": { "description": "Missing fields or invalid data" },
-            "500": { "description": "Internal server error" }
-          }
-        }
-      },
-  
-      "/api/users/login": {
-        "post": {
-          "tags": ["User"],
-          "summary": "User login",
-          "description": "Authenticates user and returns JWT tokens",
-          "parameters": [
-            {
-              "in": "body",
-              "name": "body",
-              "required": true,
-              "schema": { "$ref": "#/definitions/LoginUser" }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Login successful",
-              "schema": { "$ref": "#/definitions/LoginResponse" }
-            },
-            "400": { "description": "Missing credentials" },
-            "401": { "description": "Invalid username or password" },
-            "500": { "description": "Internal server error" }
-          }
-        }
-      },
-  
-      "/api/users/refreshToken": {
-        "post": {
-          "tags": ["User"],
-          "summary": "Refresh access token",
-          "description": "Generates a new access token from a refresh token",
-          "parameters": [
-            {
-              "in": "body",
-              "name": "body",
-              "required": true,
-              "schema": { "$ref": "#/definitions/RefreshTokenRequest" }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "New access token",
-              "schema": { "$ref": "#/definitions/AccessTokenResponse" }
-            },
-            "401": { "description": "Refresh token is required" },
-            "403": { "description": "Invalid or expired refresh token" }
-          }
-        }
-      },
-  
-      "/api/users/logout": {
-        "delete": {
-          "tags": ["User"],
-          "summary": "Logout user",
-          "description": "Invalidates refresh token and updates user activity",
-          "parameters": [
-            {
-              "in": "header",
-              "name": "Authorization",
-              "required": true,
-              "type": "string"
-            },
-            {
-              "in": "body",
-              "name": "body",
-              "required": true,
-              "schema": { "$ref": "#/definitions/RefreshTokenRequest" }
-            }
-          ],
-          "responses": {
-            "204": { "description": "Logged out successfully" },
-            "400": { "description": "Missing refresh token or not authenticated" },
-            "500": { "description": "Internal server error" }
-          }
-        }
-      },
-  
-      "/api/users/editProfile": {
-        "patch": {
-          "tags": ["User"],
-          "summary": "Edit user profile",
-          "description": "Updates user profile fields",
-          "parameters": [
-            {
-              "in": "header",
-              "name": "Authorization",
-              "required": true,
-              "type": "string"
-            },
-            {
-              "in": "body",
-              "name": "body",
-              "schema": { "$ref": "#/definitions/EditProfileRequest" }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Profile updated successfully",
-              "schema": { "$ref": "#/definitions/UpdatedUserResponse" }
-            },
-            "404": { "description": "User not found" },
-            "500": { "description": "Internal server error" }
-          }
-        }
-      },
-  
-      "/api/users/deleteUser": {
-        "delete": {
-          "tags": ["User"],
-          "summary": "Delete user account",
-          "description": "Deletes authenticated user's account",
-          "parameters": [
-            {
-              "in": "header",
-              "name": "Authorization",
-              "required": true,
-              "type": "string"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "User deleted successfully",
-              "schema": { "$ref": "#/definitions/MessageResponse" }
-            },
-            "404": { "description": "User not found" },
-            "500": { "description": "Internal server error" }
-          }
+          },
+          "500": { "description": "Failed to fetch resources" }
         }
       }
     },
-  
-    "definitions": {
-      "RegisterUser": {
-        "type": "object",
-        "required": ["username", "password", "email"],
-        "properties": {
-          "username": { "type": "string" },
-          "password": { "type": "string" },
-          "email": { "type": "string" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "birthDate": { "type": "string", "format": "date" },
-          "userPhoto": { "type": "string" }
+
+    "/api/resources/filter": {
+      "get": {
+        "summary": "Filter resources",
+        "tags": ["Resources"],
+        "parameters": [
+          { "name": "title", "in": "query", "schema": { "type": "string" } },
+          { "name": "categoryId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "ownerId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "minPrice", "in": "query", "schema": { "type": "number" } },
+          { "name": "maxPrice", "in": "query", "schema": { "type": "number" } },
+          { "name": "statusId", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filtered resources",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Resource" }
+                }
+              }
+            }
+          },
+          "500": { "description": "Failed to filter resources" }
+        }
+      }
+    },
+
+    "/api/resources/{id}": {
+      "get": {
+        "summary": "Get resource by ID",
+        "tags": ["Resources"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resource found",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Resource" } }
+            }
+          },
+          "404": { "description": "Resource not found" },
+          "500": { "description": "Failed to fetch resource" }
         }
       },
-  
-      "LoginUser": {
-        "type": "object",
-        "required": ["username", "password"],
-        "properties": {
-          "username": { "type": "string" },
-          "password": { "type": "string" }
+
+      "patch": {
+        "summary": "Edit a resource",
+        "tags": ["Resources"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EditResourceRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resource updated",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Resource" } }
+            }
+          },
+          "400": { "description": "No valid fields provided" },
+          "403": { "description": "Forbidden: Not the owner" },
+          "404": { "description": "Resource not found" },
+          "500": { "description": "Failed to update resource" }
         }
       },
-  
-      "RefreshTokenRequest": {
+
+      "delete": {
+        "summary": "Delete resource",
+        "tags": ["Resources"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "204": { "description": "Resource deleted" },
+          "403": { "description": "Forbidden: Not owner or admin/moderator" },
+          "404": { "description": "Resource not found" },
+          "500": { "description": "Failed to delete resource" }
+        }
+      }
+    },
+
+    "/api/categories": {
+      "post": {
+        "summary": "Create a new category",
+        "tags": ["Categories"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateCategoryRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Category" }
+              }
+            }
+          },
+          "400": { "description": "Category name is required" },
+          "500": { "description": "Failed to create category" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Resource": {
         "type": "object",
         "properties": {
-          "token": { "type": "string" }
+          "id": { "type": "integer" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "categoryId": { "type": "integer" },
+          "ownerId": { "type": "integer" },
+          "statusId": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
       },
-  
-      "EditProfileRequest": {
+      "CreateResourceRequest": {
         "type": "object",
+        "required": ["title", "categoryId"],
         "properties": {
-          "username": { "type": "string" },
-          "email": { "type": "string" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "userPhoto": { "type": "string" }
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "categoryId": { "type": "integer" }
         }
       },
-  
-      "LoginResponse": {
+      "EditResourceRequest": {
         "type": "object",
         "properties": {
-          "accessToken": { "type": "string" },
-          "refreshToken": { "type": "string" }
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "categoryId": { "type": "integer" },
+          "statusId": { "type": "integer" }
         }
       },
-  
-      "AccessTokenResponse": {
+      "Category": {
         "type": "object",
         "properties": {
-          "accessToken": { "type": "string" }
+          "id": { "type": "integer" },
+          "name": { "type": "string" }
         }
       },
-  
-      "UpdatedUserResponse": {
+      "CreateCategoryRequest": {
         "type": "object",
+        "required": ["name"],
         "properties": {
-          "message": { "type": "string" },
-          "user": { "$ref": "#/definitions/UserObject" }
-        }
-      },
-  
-      "MessageResponse": {
-        "type": "object",
-        "properties": {
-          "message": { "type": "string" }
-        }
-      },
-  
-      "UserObject": {
-        "type": "object",
-        "properties": {
-          "_id": { "type": "string" },
-          "username": { "type": "string" },
-          "email": { "type": "string" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "birthDate": { "type": "string", "format": "date" },
-          "userPhoto": { "type": "string" },
-          "lastAccess": { "type": "string", "format": "date-time" },
-          "activity": { "type": "number" }
+          "name": { "type": "string" }
         }
       }
     }
   }
-  
+}
