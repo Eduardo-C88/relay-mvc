@@ -14,6 +14,7 @@ async function main() {
         { name: 'PENDING' },
         { name: 'APPROVED' },
         { name: 'REJECTED' },
+        { name: 'COMPLETED' },
     ];
 
     for (const s of statuses) {
