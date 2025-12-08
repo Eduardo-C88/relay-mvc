@@ -34,4 +34,5 @@ model Status{
   id        Int      @id @default(autoincrement())
   name      String   @unique
   purchases Purchases[]
+  borrowings Borrowings[]
 }
