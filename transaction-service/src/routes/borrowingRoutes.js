@@ -1,17 +1,17 @@
-const express = require('express');
-const borrowingController = require('../controllers/borrowingController');
-const authMiddleware = require('../middleware/authMiddleware');
-const roleMiddleware = require('../middleware/roleMiddleware');
+const express = require("express");
+const borrowingController = require("../controllers/borrowingController");
+const authMiddleware = require("../middleware/authMiddleware");
+const roleMiddleware = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
 router.use(authMiddleware.authenticateToken);
 
-router.post("/:id", borrowingController.createBorrowReq);
+router.post("/:id", borrowingController.createBorrow);
 // Owner approves
-router.post("/:id/approve", borrowingController.approveBorrowReq);
+router.post("/:id/approve", borrowingController.approveBorrow);
 // Owner rejects
-router.post("/:id/reject", borrowingController.rejectBorrowReq);
+router.post("/:id/reject", borrowingController.rejectBorrow);
 // // User returns item
 // router.post("/:id/return", borrowingController.returnBorrowedItem);
 // // Owner confirms return
@@ -21,8 +21,16 @@ router.post("/:id/reject", borrowingController.rejectBorrowReq);
 router.get("/history", borrowingController.getBorrowingsHistory);
 
 // Get all borrowings for a user as moderator/admin
-router.get("/:id/history", roleMiddleware.authorizeRole([2, 3]), borrowingController.getUserBorrowings);
+router.get(
+  "/:id/history",
+  roleMiddleware.authorizeRole([2, 3]),
+  borrowingController.getUserBorrowings
+);
 // Get all borrowings (admin/moderator)
-router.get("/all", roleMiddleware.authorizeRole([2, 3]), borrowingController.getAllBorrowings);
+router.get(
+  "/all",
+  roleMiddleware.authorizeRole([2, 3]),
+  borrowingController.getAllBorrowings
+);
 
 module.exports = router;

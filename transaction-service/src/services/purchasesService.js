@@ -9,7 +9,7 @@ exports.createPurchaseReq = async (purchaseData) => {
   return purchase;
 };
 
-exports.approveTransaction = async (transactionId, currentUserId) => {
+exports.approveTransactionReq = async (transactionId, currentUserId) => {
   const transaction = await prisma.purchases.findUnique({
     where: { id: transactionId },
   });
@@ -55,7 +55,7 @@ exports.approveTransaction = async (transactionId, currentUserId) => {
   return updatedTransaction;
 };
 
-exports.rejectTransaction = async (transactionId, currentUserId) => {
+exports.rejectTransactionReq = async (transactionId, currentUserId) => {
   //Buscar a transação pelo ID e incluir os dados do item associado
   const transaction = await prisma.purchases.findUnique({
     where: { id: transactionId },
@@ -97,7 +97,7 @@ exports.rejectTransaction = async (transactionId, currentUserId) => {
   return updatedTransaction;
 };
 
-exports.completeTransaction = async (transactionId, currentUserId) => {
+exports.completeTransactionReq = async (transactionId, currentUserId) => {
   //Buscar transação + item
   const transaction = await prisma.purchases.findUnique({
     where: { id: transactionId },
@@ -138,7 +138,7 @@ exports.completeTransaction = async (transactionId, currentUserId) => {
   return updatedTransaction;
 };
 
-exports.getPurchasesHistory = async (userId) => {
+exports.getPurchasesHistoryReq = async (userId) => {
   //Buscar todas as compras do utilizador (buyerId) no Prisma
   const purchases = await prisma.purchases.findMany({
     where: { buyerId: userId },
@@ -155,21 +155,7 @@ exports.getPurchasesHistory = async (userId) => {
   return purchases;
 };
 
-exports.getUserBorrowings = async (userId) => {
-  const borrowings = await prisma.borrowings.findMany({
-    where: { borrowerId: userId }, // busca empréstimos pelo ID do usuário
-    include: { item: true }, // inclui dados do item associado
-    orderBy: { createdAt: "desc" }, // mais recentes primeiro
-  });
-
-  // Caso não haja empréstimos
-  if (borrowings.length === 0)
-    throw new Error("No borrowings found for this user");
-
-  return borrowings;
-};
-
-exports.getUserPurchases = async (userId) => {
+exports.getUserPurchasesReq = async (userId) => {
   // Buscar todas as compras do usuário pelo ID
   const purchases = await prisma.purchases.findMany({
     where: { buyerId: userId },
@@ -185,7 +171,7 @@ exports.getUserPurchases = async (userId) => {
   return purchases;
 };
 
-exports.getAllPurchases = async () => {
+exports.getAllPurchasesReq = async () => {
   // Buscar todas as compras no sistema
   const purchases = await prisma.purchases.findMany({
     include: { item: true }, // incluir dados do item

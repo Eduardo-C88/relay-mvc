@@ -1,6 +1,6 @@
 const purchasesService = require("../services/purchasesService");
 
-exports.createPurchaseReq = async (req, res) => {
+exports.createPurchase = async (req, res) => {
   try {
     const purchaseData = {
       resourceId: req.body.resourceId,
@@ -21,7 +21,7 @@ exports.approveTransaction = async (req, res) => {
   try {
     const purchaseId = parseInt(req.params.purchaseId);
 
-    const transaction = await purchasesService.approveTransaction(
+    const transaction = await purchasesService.approveTransactionReq(
       purchaseId,
       req.user.id
     );
@@ -47,7 +47,7 @@ exports.rejectTransaction = async (req, res) => {
     const { purchaseId } = req.params;
 
     //Chamar o service responsável por tratar da lógica de rejeição
-    const transaction = await purchasesService.rejectTransaction(
+    const transaction = await purchasesService.rejectTransactionReq(
       purchaseId,
       req.user.id
     );
@@ -74,7 +74,7 @@ exports.completeTransaction = async (req, res) => {
   try {
     const purchaseId = parseInt(req.params.purchaseId);
 
-    const transaction = await purchasesService.completeTransaction(
+    const transaction = await purchasesService.completeTransactionReq(
       purchaseId,
       req.user.id
     );
@@ -100,7 +100,7 @@ exports.getPurchasesHistory = async (req, res) => {
     const buyerId = req.user.id;
 
     //Chamar o service que retorna o histórico de compras do utilizador
-    const purchases = await purchasesService.getPurchasesHistory(buyerId);
+    const purchases = await purchasesService.getPurchasesHistoryReq(buyerId);
 
     //Devolver resposta de sucesso com os dados
     return res.status(200).json({
@@ -124,7 +124,7 @@ exports.getUserPurchases = async (req, res) => {
   try {
     const userId = parseInt(req.params.id); // ID do usuário passado na URL
 
-    const purchases = await purchasesService.getUserPurchases(userId);
+    const purchases = await purchasesService.getUserPurchasesReq(userId);
 
     return res.status(200).json({
       success: true,
@@ -143,7 +143,7 @@ exports.getUserPurchases = async (req, res) => {
 
 exports.getAllPurchases = async (req, res) => {
   try {
-    const purchases = await purchasesService.getAllPurchases();
+    const purchases = await purchasesService.getAllPurchasesReq();
     return res.status(200).json({
       success: true,
       message: "All purchases retrieved",

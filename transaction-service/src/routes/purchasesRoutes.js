@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.use(authMiddleware.authenticateToken);
 
-router.post("/", purchasesController.createPurchaseReq);
+router.post("/", purchasesController.createPurchase);
 // Seller appoves
 router.post("/:purchaseId/approve", purchasesController.approveTransaction);
 // Seller rejects
