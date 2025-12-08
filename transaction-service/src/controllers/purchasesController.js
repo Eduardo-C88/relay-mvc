@@ -3,7 +3,7 @@ const purchasesService = require("../services/purchasesService");
 exports.createPurchaseReq = async (req, res) => {
   try {
     const purchaseData = {
-      itemId: req.params.id,
+      resourceId: req.body.resourceId,
       buyerId: req.user.id,
       // Add other necessary fields from req.body if needed
     };
@@ -19,7 +19,7 @@ exports.createPurchaseReq = async (req, res) => {
 
 exports.approveTransaction = async (req, res) => {
   try {
-    const { purchaseId } = req.params;
+    const purchaseId = parseInt(req.params.purchaseId);
 
     const transaction = await purchasesService.approveTransaction(
       purchaseId,

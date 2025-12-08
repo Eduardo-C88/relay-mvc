@@ -32,6 +32,6 @@ app.use("/apidoc", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // app.use Routes
 //app.use("/api/borrowings", borrowingRoutes);
-app.use("/api/purchases", purchasesRoutes);
+app.use(purchasesRoutes);
 
 module.exports = app;

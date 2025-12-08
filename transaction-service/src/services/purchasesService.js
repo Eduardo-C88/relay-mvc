@@ -12,38 +12,37 @@ exports.createPurchaseReq = async (purchaseData) => {
 exports.approveTransaction = async (transactionId, currentUserId) => {
   const transaction = await prisma.purchases.findUnique({
     where: { id: transactionId },
-    include: { item: true },
   });
 
   if (!transaction) throw new Error("Transaction not found");
-  if (transaction.status !== "PENDING")
+  if (transaction.statusId !== 4)
     throw new Error("Only PENDING transactions can be approved");
-  if (!transaction.item) throw new Error("Associated item not found");
+  //if (!transaction.item) throw new Error("Associated item not found");
 
-  if (transaction.item.ownerId !== currentUserId) {
-    throw new Error("You are not allowed to approve this transaction");
-  }
+  // if (transaction.item.ownerId !== currentUserId) {
+  //   throw new Error("You are not allowed to approve this transaction");
+  // }
 
-  if (!transaction.item.isAvailable) {
-    throw new Error("Item is no longer available");
-  }
+  // if (!transaction.item.isAvailable) {
+  //   throw new Error("Item is no longer available");
+  // }
 
   const [updatedTransaction] = await prisma.$transaction([
     prisma.purchases.update({
       where: { id: transactionId },
       data: {
-        status: "APPROVED",
-        approvedAt: new Date(),
+        statusId: 5,
+        //approvedAt: new Date(),
       },
     }),
 
-    prisma.items.update({
-      where: { id: transaction.itemId },
-      data: {
-        isAvailable: false,
-        isForSale: false,
-      },
-    }),
+    // prisma.items.update({
+    //   where: { id: transaction.itemId },
+    //   data: {
+    //     isAvailable: false,
+    //     isForSale: false,
+    //   },
+    // }),
   ]);
 
   // Disparar evento
