@@ -11,7 +11,7 @@ router.post("/:resourceId/purchase", purchasesController.createPurchase);
 // // Seller appoves
 router.post("/:resourceId/approve", purchasesController.approvePurchase);
 // // Seller rejects
-// router.post("/:resourceId/reject", purchasesController.rejectTransaction);
+router.post("/:resourceId/reject", purchasesController.rejectTransaction);
 // // // Complete transaction (buyer confirms receipt)
 // router.post("/:resourceId/complete", purchasesController.completeTransaction);
 // // Get own purchases for a user

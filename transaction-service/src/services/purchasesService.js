@@ -27,3 +27,16 @@ exports.approvePurchaseReq = async (resourceId) => {
 
   return updatedPurchase;
 };
+
+exports.rejectPurchaseReq = async (resourceId) => {
+  const updatedPurchase = await prisma.purchases.updateMany({
+    where: { resourceId, statusId: 4 }, // Only update if status is 'Pending'
+    data: { statusId: 6 }, // Rejected
+  });
+
+  publishPurchaseConfirmed({
+    resourceId: resourceId,
+    statusId: 6,
+  });
+  return updatedPurchase;
+};

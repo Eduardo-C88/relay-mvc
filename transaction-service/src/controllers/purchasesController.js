@@ -52,3 +52,25 @@ exports.approvePurchase = async (req, res) => {
     res.status(500).json({ error: "Failed to approve purchase" });
   }
 };
+
+exports.rejectPurchase = async (req, res) => {
+  const resourceId = parseInt(req.params.resourceId);
+  const userId = req.user.id;
+  if (isNaN(resourceId)) {
+    return res.status(400).json({ error: "Invalid resource ID" });
+  }
+  try {
+    // Check if the purchase can be rejected
+    const confirmable = await resourceClient.checkConfirmable(resourceId, userId);
+    if (!confirmable) {
+      console.log(`Purchase for resource ${resourceId} cannot be rejected by user ${userId}`);
+      return res.status(400).json({ error: "Purchase cannot be rejected" });
+    }
+
+    const updatedPurchase = await purchasesService.rejectPurchaseReq(resourceId, userId);
+    res.status(200).json(updatedPurchase);
+  } catch (error) {
+    console.error("Failed to reject purchase:", error);
+    res.status(500).json({ error: "Failed to reject purchase" });
+  }
+};
