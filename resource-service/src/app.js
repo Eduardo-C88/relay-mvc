@@ -5,9 +5,9 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("../static/swagger/swagger.json");
 const { connectRabbitMQ } = require("./utils/rabbitmq");
 const {
-  startUserUpdatedConsumer,
-  startUserCreatedConsumer,
-  startPurchaseRequestConsumer
+  startUserEventsConsumer, 
+  startPurchaseRequestConsumer,
+  startPurchaseConfirmedConsumer
 } = require("./events/resourceConsumer");
 
 // App Routes
@@ -28,9 +28,9 @@ app.use("/apidoc", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // Connect to RabbitMQ and start consumers
 (async () => {
   const channel = await connectRabbitMQ();
-  await startUserCreatedConsumer(channel);
-  await startUserUpdatedConsumer(channel);
+  await startUserEventsConsumer(channel);
   await startPurchaseRequestConsumer(channel);
+  await startPurchaseConfirmedConsumer(channel);
 })();
 
 // app.use Routes

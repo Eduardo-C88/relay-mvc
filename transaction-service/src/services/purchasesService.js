@@ -40,3 +40,18 @@ exports.rejectPurchaseReq = async (resourceId) => {
   });
   return updatedPurchase;
 };
+
+exports.getPurchasesByUser = async (userId) => {
+  const purchases = await prisma.purchases.findMany({
+    where: { buyerId: userId }, 
+    include: { status: true },
+  });
+  return purchases;
+};
+
+exports.getAllPurchases = async () => {
+  const purchases = await prisma.purchases.findMany({
+    include: { status: true },
+  });
+  return purchases;
+};

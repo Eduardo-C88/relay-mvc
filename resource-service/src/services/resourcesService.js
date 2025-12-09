@@ -140,7 +140,7 @@ exports.createCategory = async (data) => {
     return newCategory;
 }
 
-exports.checkResourceAvailability = async (resourceId, buyerId) => {
+exports.getResourceAvailability = async (resourceId, buyerId) => {
     console.log(`Checking availability for resourceId: ${resourceId}, buyerId: ${buyerId}`);
     const resource = await prisma.resource.findUnique({
         where: { id: parseInt(resourceId) },

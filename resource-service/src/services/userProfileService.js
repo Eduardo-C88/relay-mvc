@@ -24,25 +24,7 @@ class UserProfileService {
       },
     });
   }
-  
-  async updateUserInfo(update) {
-    await this.prisma.userProfile.upsert({
-      where: { id: update.userId },
-      update: {
-        name: update.name,
-        reputation: update.reputation,
-        university: update.university,
-        course: update.course,
-      },
-      create: {
-        id: update.userId,
-        name: update.name,
-        reputation: update.reputation,
-        university: update.university,
-        course: update.course,
-      }
-    });
-  }
+
 }
 
 module.exports = UserProfileService;

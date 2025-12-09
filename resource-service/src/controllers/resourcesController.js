@@ -196,8 +196,9 @@ exports.checkResourceAvailability = async (req, res) => {
   }
 
   try {
-    const { isAvailable, ownerId } = await resourceService.checkResourceAvailability(resourceId, buyerId);
-    res.status(200).json({ isAvailable, ownerId });
+    const { available, ownerId } = await resourceService.getResourceAvailability(resourceId, buyerId);
+    console.log(`Resource ${resourceId} availability for buyer ${buyerId}: ${available}`);
+    res.status(200).json({ available, ownerId });
   } catch (error) {
     res.status(404).json({ error: error.message });
   }
