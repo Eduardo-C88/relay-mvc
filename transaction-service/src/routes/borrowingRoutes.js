@@ -21,16 +21,8 @@ router.post("/:id/reject", borrowingController.rejectBorrow);
 router.get("/history", borrowingController.getBorrowingsHistory);
 
 // Get all borrowings for a user as moderator/admin
-router.get(
-  "/:id/history",
-  roleMiddleware.authorizeRole([2, 3]),
-  borrowingController.getUserBorrowings
-);
+router.get("/:id/history", roleMiddleware.authorizeRole([2, 3]), borrowingController.getUserBorrowings);
 // Get all borrowings (admin/moderator)
-router.get(
-  "/all",
-  roleMiddleware.authorizeRole([2, 3]),
-  borrowingController.getAllBorrowings
-);
+router.get("/all",roleMiddleware.authorizeRole([2, 3]),borrowingController.getAllBorrowings);
 
 module.exports = router;
