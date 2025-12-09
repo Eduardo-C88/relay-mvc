@@ -15,6 +15,7 @@ const roleMiddleware = require("../middleware/roleMiddleware");
 const router = express.Router();
 
 router.get("/internal/:id/availability", resourcesController.checkResourceAvailability);
+router.get("/internal/:id/confirmable", resourcesController.checkResourceConfirmable);
 
 router.use(authMiddleware.authenticateToken);
 router.post("/create", resourcesController.createResource);

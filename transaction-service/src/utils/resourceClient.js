@@ -9,7 +9,22 @@ exports.checkAvailability = async (resourceId, buyerId) => {
       { params: { buyerId } }
     );
 
-    return response.data.available;
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      return null; // resource not found
+    }
+    throw error;
+  }
+};
+
+exports.checkConfirmable = async (resourceId, userId) => {
+  try {
+    const response = await axios.get(
+      `${RESOURCE_SERVICE_URL}/internal/${resourceId}/confirmable`,
+      { params: { userId } }
+    );
+    return response.data.confirmable;
   } catch (error) {
     if (error.response && error.response.status === 404) {
       return null; // resource not found

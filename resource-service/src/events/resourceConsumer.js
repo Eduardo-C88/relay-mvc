@@ -35,5 +35,17 @@ async function startPurchaseRequestConsumer(channel) {
     channel.ack(msg);
   });
 }
-  
-module.exports = { startUserUpdatedConsumer, startUserCreatedConsumer, startPurchaseRequestConsumer };
+
+async function startPurchaseConfirmedConsumer(channel) {
+  await channel.assertQueue("PurchaseRequestConfirmed");
+  channel.consume("PurchaseRequestConfirmed", async (msg) => {
+    const purchaseConfirmed = JSON.parse(msg.content.toString());
+    await resourceService.changeResourceStatus(
+      purchaseConfirmed.resourceId,
+      purchaseConfirmed.statusId
+    );
+    channel.ack(msg);
+  });
+}
+
+module.exports = { startUserUpdatedConsumer, startUserCreatedConsumer, startPurchaseRequestConsumer, startPurchaseConfirmedConsumer };

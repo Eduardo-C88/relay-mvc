@@ -68,6 +68,7 @@ exports.deleteResource = async (resourceId) => {
 
 exports.getAllResources = async () => {
     return await prisma.resource.findMany({
+        where: {statusId: 1}, // Only return available resources
         select: {
             title: true,
             price: true,
@@ -139,7 +140,7 @@ exports.createCategory = async (data) => {
     return newCategory;
 }
 
-exports.checResourceAvailability = async (resourceId, buyerId) => {
+exports.checkResourceAvailability = async (resourceId, buyerId) => {
     console.log(`Checking availability for resourceId: ${resourceId}, buyerId: ${buyerId}`);
     const resource = await prisma.resource.findUnique({
         where: { id: parseInt(resourceId) },
@@ -153,8 +154,24 @@ exports.checResourceAvailability = async (resourceId, buyerId) => {
     }
     // Check if the resource is available and not owned by the buyer
     const isAvailable = resource.statusId === 1 && resource.ownerId !== parseInt(buyerId);
-    
     return { available: isAvailable, ownerId: resource.ownerId };
+};
+
+exports.checkResourceConfirmable = async (resourceId, userId) => {
+    console.log(`Checking confirmable for resourceId: ${resourceId}, userId: ${userId}`);
+    const resource = await prisma.resource.findUnique({
+        where: { id: parseInt(resourceId) },
+        select: {
+            ownerId: true,
+            statusId: true
+        }
+    });
+    if (!resource) {
+        throw new Error('Resource not found');
+    }
+    // A purchase can be confirmed if the resource is sold and the user is the owner
+    const confirmable = resource.statusId === 4 && resource.ownerId === parseInt(userId);
+    return confirmable;
 };
 
 exports.changeResourceStatus = async (resourceId, statusId) => {

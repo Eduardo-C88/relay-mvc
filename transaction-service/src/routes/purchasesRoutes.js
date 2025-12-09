@@ -9,12 +9,11 @@ router.use(authMiddleware.authenticateToken);
 
 router.post("/:resourceId/purchase", purchasesController.createPurchase);
 // // Seller appoves
-// router.post("/:id/approve", purchasesController.approveTransaction);
+router.post("/:resourceId/approve", purchasesController.approvePurchase);
 // // Seller rejects
-// router.post("/:id/reject", purchasesController.rejectTransaction);
+// router.post("/:resourceId/reject", purchasesController.rejectTransaction);
 // // // Complete transaction (buyer confirms receipt)
-// router.post("/:id/complete", purchasesController.completeTransaction);
-
+// router.post("/:resourceId/complete", purchasesController.completeTransaction);
 // // Get own purchases for a user
 // router.get("/history", purchasesController.getPurchasesHistory);
 

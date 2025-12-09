@@ -189,15 +189,30 @@ exports.createCategory = async (req, res) => {
 
 exports.checkResourceAvailability = async (req, res) => {
   const resourceId = req.params.id;
-  const buyerId = req.query.buyerId;
+  const buyerId = parseInt(req.query.buyerId);
 
   if (!buyerId) {
     return res.status(400).json({ error: "buyerId is required" });
   }
 
   try {
-    const { available, ownerId } = await resourceService.checResourceAvailability(resourceId, buyerId);
-    res.status(200).json({ available: isAvailable });
+    const { isAvailable, ownerId } = await resourceService.checkResourceAvailability(resourceId, buyerId);
+    res.status(200).json({ isAvailable, ownerId });
+  } catch (error) {
+    res.status(404).json({ error: error.message });
+  }
+};
+
+
+exports.checkResourceConfirmable = async (req, res) => {
+  const resourceId = req.params.id;
+  const userId = req.query.userId;
+  if (!userId) {
+    return res.status(400).json({ error: "userId is required" });
+  }
+  try {
+    const isConfirmable = await resourceService.checkResourceConfirmable(resourceId, userId);
+    res.status(200).json({ confirmable: isConfirmable });
   } catch (error) {
     res.status(404).json({ error: error.message });
   }
