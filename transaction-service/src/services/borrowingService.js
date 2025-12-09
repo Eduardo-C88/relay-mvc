@@ -1,6 +1,6 @@
 const { prisma } = require("../models/prismaClient");
-const { publishBorrowCreated } = require("../events/borrowingPublisher");
-const { publishBorrowConfirmed } = require("../events/borrowingPublisher");
+const { publishBorrowCreated } = require("../events/transactionPublisher");
+const { publishBorrowConfirmed } = require("../events/transactionPublisher");
 
 exports.createBorrowReq = async (borrowData) => {
   const newBorrow = await prisma.borrowings.create({
