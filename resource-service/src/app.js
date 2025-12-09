@@ -7,6 +7,7 @@ const { connectRabbitMQ } = require("./utils/rabbitmq");
 const {
   startUserUpdatedConsumer,
   startUserCreatedConsumer,
+  startPurchaseRequestConsumer
 } = require("./events/resourceConsumer");
 
 // App Routes
@@ -29,6 +30,7 @@ app.use("/apidoc", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
   const channel = await connectRabbitMQ();
   await startUserCreatedConsumer(channel);
   await startUserUpdatedConsumer(channel);
+  await startPurchaseRequestConsumer(channel);
 })();
 
 // app.use Routes

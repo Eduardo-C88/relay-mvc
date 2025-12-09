@@ -186,3 +186,19 @@ exports.createCategory = async (req, res) => {
     res.status(500).json({ error: "Failed to create category" });
   }
 };
+
+exports.checkResourceAvailability = async (req, res) => {
+  const resourceId = req.params.id;
+  const buyerId = req.query.buyerId;
+
+  if (!buyerId) {
+    return res.status(400).json({ error: "buyerId is required" });
+  }
+
+  try {
+    const { available, ownerId } = await resourceService.checResourceAvailability(resourceId, buyerId);
+    res.status(200).json({ available: isAvailable });
+  } catch (error) {
+    res.status(404).json({ error: error.message });
+  }
+};

@@ -138,3 +138,44 @@ exports.createCategory = async (data) => {
     });
     return newCategory;
 }
+
+exports.checResourceAvailability = async (resourceId, buyerId) => {
+    console.log(`Checking availability for resourceId: ${resourceId}, buyerId: ${buyerId}`);
+    const resource = await prisma.resource.findUnique({
+        where: { id: parseInt(resourceId) },
+        select: {
+            ownerId: true,
+            statusId: true
+        }
+    });
+    if (!resource) {
+        throw new Error('Resource not found');
+    }
+    // Check if the resource is available and not owned by the buyer
+    const isAvailable = resource.statusId === 1 && resource.ownerId !== parseInt(buyerId);
+    
+    return { available: isAvailable, ownerId: resource.ownerId };
+};
+
+exports.changeResourceStatus = async (resourceId, statusId) => {
+    try {
+        const updatedResource = await prisma.resource.update({
+            where: { id: parseInt(resourceId) },
+            data: { statusId: statusId },
+            include: {
+                category: true,
+                status: true
+            }
+        });
+        return updatedResource;
+    } catch (error) {
+        // Prisma error code P2025 indicates "Record to update not found."
+        if (error.code === 'P2025') {
+            const notFoundError = new Error('Resource not found');
+            notFoundError.statusCode = 404;
+            throw notFoundError;
+        }
+        // Re-throw any other unexpected error
+        throw error;
+    }
+};

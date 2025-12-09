@@ -1,159 +1,35 @@
 const purchasesService = require("../services/purchasesService");
+const resourceClient = require("../utils/resourceClient");
 
 exports.createPurchase = async (req, res) => {
+  const resourceId = parseInt(req.params.id);
+  const buyerId = req.user.id;
+
+  if (isNaN(resourceId)) {
+    return res.status(400).json({ error: "Invalid resource ID" });
+  }
+
   try {
+    // 1️⃣ Check resource availability
+    const availability = await resourceClient.checkAvailability(resourceId, buyerId);
+
+    if (!availability) {
+      return res.status(400).json({ error: "Resource is not available for purchase" });
+    }
+
+    // 2️⃣ Create purchase request using the ownerId as sellerId
     const purchaseData = {
-      resourceId: req.body.resourceId,
-      buyerId: req.user.id,
-      // Add other necessary fields from req.body if needed
+      buyerId,
+      resourceId,
+      sellerId: availability.ownerId,  // <- from Resource service
+      statusId: 4 // Pending
     };
+
     const purchase = await purchasesService.createPurchaseReq(purchaseData);
+
     res.status(201).json(purchase);
   } catch (error) {
-    console.error("Error creating purchase request:", error);
-    res
-      .status(500)
-      .json({ error: error.message || "Failed to create purchase request" });
-  }
-};
-
-exports.approveTransaction = async (req, res) => {
-  try {
-    const purchaseId = parseInt(req.params.purchaseId);
-
-    const transaction = await purchasesService.approveTransactionReq(
-      purchaseId,
-      req.user.id
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "Transaction approved",
-      data: transaction,
-    });
-  } catch (error) {
-    console.error("Error approving transaction:", error);
-
-    return res.status(400).json({
-      success: false,
-      error: error.message || "Failed to approve transaction",
-    });
-  }
-};
-
-exports.rejectTransaction = async (req, res) => {
-  try {
-    //Ir buscar o ID da transação a rejeitar a partir dos parâmetros da rota
-    const { purchaseId } = req.params;
-
-    //Chamar o service responsável por tratar da lógica de rejeição
-    const transaction = await purchasesService.rejectTransactionReq(
-      purchaseId,
-      req.user.id
-    );
-
-    //Se tudo correr bem, devolver resposta de sucesso
-    return res.status(200).json({
-      success: true,
-      message: "Transaction rejected",
-      data: transaction,
-    });
-  } catch (error) {
-    //Caso ocorra algum erro, mostrar no servidor para debug
-    console.error("Error rejecting transaction:", error);
-
-    //Enviar resposta de erro para o cliente
-    return res.status(400).json({
-      success: false,
-      error: error.message || "Failed to reject transaction",
-    });
-  }
-};
-
-exports.completeTransaction = async (req, res) => {
-  try {
-    const purchaseId = parseInt(req.params.purchaseId);
-
-    const transaction = await purchasesService.completeTransactionReq(
-      purchaseId,
-      req.user.id
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "Transaction completed",
-      data: transaction,
-    });
-  } catch (error) {
-    console.error("Error completing transaction:", error);
-
-    return res.status(400).json({
-      success: false,
-      error: error.message || "Failed to complete transaction",
-    });
-  }
-};
-
-exports.getPurchasesHistory = async (req, res) => {
-  try {
-    //Buscar o ID do comprador a partir do utilizador autenticado
-    const buyerId = req.user.id;
-
-    //Chamar o service que retorna o histórico de compras do utilizador
-    const purchases = await purchasesService.getPurchasesHistoryReq(buyerId);
-
-    //Devolver resposta de sucesso com os dados
-    return res.status(200).json({
-      success: true,
-      message: "Purchases history retrieved",
-      data: purchases,
-    });
-  } catch (error) {
-    //Log para debug
-    console.error("Error retrieving purchases history:", error);
-
-    //Devolver resposta de erro
-    return res.status(400).json({
-      success: false,
-      error: error.message || "Failed to retrieve purchases history",
-    });
-  }
-};
-
-exports.getUserPurchases = async (req, res) => {
-  try {
-    const userId = parseInt(req.params.id); // ID do usuário passado na URL
-
-    const purchases = await purchasesService.getUserPurchasesReq(userId);
-
-    return res.status(200).json({
-      success: true,
-      message: "User purchases retrieved",
-      data: purchases,
-    });
-  } catch (error) {
-    console.error("Error retrieving user purchases:", error);
-
-    return res.status(400).json({
-      success: false,
-      error: error.message || "Failed to retrieve user purchases",
-    });
-  }
-};
-
-exports.getAllPurchases = async (req, res) => {
-  try {
-    const purchases = await purchasesService.getAllPurchasesReq();
-    return res.status(200).json({
-      success: true,
-      message: "All purchases retrieved",
-      data: purchases,
-    });
-  } catch (error) {
-    console.error("Error retrieving all purchases:", error);
-    return res.status(500).json({
-      success: false,
-      error: error.message || "Failed to retrieve all purchases",
-    });
+    console.error("Failed to create purchase:", error);
+    res.status(500).json({ error: "Failed to create purchase" });
   }
 };
