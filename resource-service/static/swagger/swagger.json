@@ -3,7 +3,65 @@
   "info": {
     "title": "Resource Service API",
     "version": "1.0.0",
-    "description": "API documentation for resource and category management."
+    "description": "API documentation for resource and category management. \n\nThis service also consumes domain events from RabbitMQ:\n- User events (`UserCreated` and `UserUpdated`) from the `user_events` fanout exchange.\n- Purchase request events (`PurchaseRequestCreated` and `PurchaseRequestConfirmed`) from point-to-point queues."
+  },
+  "x-messaging": {
+    "rabbitmq": {
+      "consumers": {
+        "user_events": {
+          "exchange": "user_events",
+          "type": "fanout",
+          "queue": "resource_service_user_sync",
+          "description": "Consumes UserCreated and UserUpdated events to sync user profiles in the resource service.",
+          "events": {
+            "UserCreated": {
+              "summary": "A new user was created",
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "integer" },
+                  "name": { "type": "string" },
+                  "email": { "type": "string" }
+                }
+              }
+            },
+            "UserUpdated": {
+              "summary": "An existing user was updated",
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "integer" },
+                  "name": { "type": "string" },
+                  "email": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "PurchaseRequestCreated": {
+          "queue": "PurchaseRequestCreated",
+          "description": "Consumes new purchase requests to update resource status.",
+          "payload": {
+            "type": "object",
+            "properties": {
+              "resourceId": { "type": "integer" },
+              "statusId": { "type": "integer" }
+            }
+          }
+        },
+        "PurchaseRequestConfirmed": {
+          "queue": "PurchaseRequestConfirmed",
+          "description": "Consumes confirmed purchase requests to update resource status.",
+          "payload": {
+            "type": "object",
+            "properties": {
+              "resourceId": { "type": "integer" },
+              "statusId": { "type": "integer" }
+            }
+          }
+        }
+      }
+    }
   },
   "servers": [
     {
@@ -23,19 +81,10 @@
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateResourceRequest" }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateResourceRequest" } } }
         },
         "responses": {
-          "201": {
-            "description": "Resource created",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/Resource" } }
-            }
-          },
+          "201": { "description": "Resource created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Resource" } } } },
           "400": { "description": "Missing title or categoryId" },
           "500": { "description": "Failed to create resource" }
         }
@@ -44,22 +93,11 @@
         "summary": "Get all resources",
         "tags": ["Resources"],
         "responses": {
-          "200": {
-            "description": "A list of resources",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/Resource" }
-                }
-              }
-            }
-          },
+          "200": { "description": "A list of resources", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Resource" } } } } },
           "500": { "description": "Failed to fetch resources" }
         }
       }
     },
-
     "/api/resources/filter": {
       "get": {
         "summary": "Filter resources",
@@ -73,77 +111,41 @@
           { "name": "statusId", "in": "query", "schema": { "type": "integer" } }
         ],
         "responses": {
-          "200": {
-            "description": "Filtered resources",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/Resource" }
-                }
-              }
-            }
-          },
+          "200": { "description": "Filtered resources", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Resource" } } } } },
           "500": { "description": "Failed to filter resources" }
         }
       }
     },
-
     "/api/resources/{id}": {
       "get": {
         "summary": "Get resource by ID",
         "tags": ["Resources"],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
-        ],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
         "responses": {
-          "200": {
-            "description": "Resource found",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/Resource" } }
-            }
-          },
+          "200": { "description": "Resource found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Resource" } } } },
           "404": { "description": "Resource not found" },
           "500": { "description": "Failed to fetch resource" }
         }
       },
-
       "patch": {
         "summary": "Edit a resource",
         "tags": ["Resources"],
         "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/EditResourceRequest" }
-            }
-          }
-        },
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EditResourceRequest" } } } },
         "responses": {
-          "200": {
-            "description": "Resource updated",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/Resource" } }
-            }
-          },
+          "200": { "description": "Resource updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Resource" } } } },
           "400": { "description": "No valid fields provided" },
           "403": { "description": "Forbidden: Not the owner" },
           "404": { "description": "Resource not found" },
           "500": { "description": "Failed to update resource" }
         }
       },
-
       "delete": {
         "summary": "Delete resource",
         "tags": ["Resources"],
         "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
-        ],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
         "responses": {
           "204": { "description": "Resource deleted" },
           "403": { "description": "Forbidden: Not owner or admin/moderator" },
@@ -152,28 +154,13 @@
         }
       }
     },
-
     "/api/categories": {
       "post": {
         "summary": "Create a new category",
         "tags": ["Categories"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateCategoryRequest" }
-            }
-          }
-        },
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateCategoryRequest" } } } },
         "responses": {
-          "201": {
-            "description": "Category created",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Category" }
-              }
-            }
-          },
+          "201": { "description": "Category created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Category" } } } },
           "400": { "description": "Category name is required" },
           "500": { "description": "Failed to create category" }
         }
@@ -181,6 +168,7 @@
     }
   },
   "components": {
+    "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" } },
     "schemas": {
       "Resource": {
         "type": "object",
@@ -216,20 +204,8 @@
           "statusId": { "type": "integer" }
         }
       },
-      "Category": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer" },
-          "name": { "type": "string" }
-        }
-      },
-      "CreateCategoryRequest": {
-        "type": "object",
-        "required": ["name"],
-        "properties": {
-          "name": { "type": "string" }
-        }
-      }
+      "Category": { "type": "object", "properties": { "id": { "type": "integer" }, "name": { "type": "string" } } },
+      "CreateCategoryRequest": { "type": "object", "required": ["name"], "properties": { "name": { "type": "string" } } }
     }
   }
 }

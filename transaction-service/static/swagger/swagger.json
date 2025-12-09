@@ -1,260 +1,227 @@
 {
-    "swagger": "2.0",
-    "info": {
-      "title": "User Authentication API",
-      "version": "1.0.0",
-      "description": "API for user registration, login, authentication, token refresh, logout, profile management and deletion."
-    },
-    "basePath": "/",
-    "schemes": ["http"],
-    "consumes": ["application/json"],
-    "produces": ["application/json"],
-  
-    "paths": {
-      "/api/users/register": {
-        "post": {
-          "tags": ["User"],
-          "summary": "Register new user",
-          "description": "Create a new user account",
-          "parameters": [
-            {
-              "in": "body",
-              "name": "body",
-              "required": true,
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Transaction Service API",
+    "version": "1.0.0",
+    "description": "API documentation for managing purchases and borrowings.\n\nThis service also publishes events to RabbitMQ:\n- Purchase events (`PurchaseRequestCreated` and `PurchaseRequestConfirmed`)\n- Borrow events (`BorrowRequestCreated` and `BorrowRequestConfirmed`)"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3004",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    { "name": "Purchases", "description": "Purchase management endpoints" },
+    { "name": "Borrowings", "description": "Borrowing management endpoints" }
+  ],
+  "paths": {
+    "/api/borrowings/:id": {
+      "post": {
+        "summary": "Create a borrow request",
+        "tags": ["Borrowings"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
               "schema": {
-                "$ref": "#/definitions/RegisterUser"
+                "type": "object",
+                "required": ["startDate", "endDate"],
+                "properties": {
+                  "startDate": { "type": "string", "format": "date-time" },
+                  "endDate": { "type": "string", "format": "date-time" }
+                }
               }
             }
-          ],
-          "responses": {
-            "201": {
-              "description": "User registered successfully",
-              "schema": {
-                "$ref": "#/definitions/MessageResponse"
-              }
-            },
-            "400": { "description": "Missing fields or invalid data" },
-            "500": { "description": "Internal server error" }
           }
-        }
-      },
-  
-      "/api/users/login": {
-        "post": {
-          "tags": ["User"],
-          "summary": "User login",
-          "description": "Authenticates user and returns JWT tokens",
-          "parameters": [
-            {
-              "in": "body",
-              "name": "body",
-              "required": true,
-              "schema": { "$ref": "#/definitions/LoginUser" }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Login successful",
-              "schema": { "$ref": "#/definitions/LoginResponse" }
-            },
-            "400": { "description": "Missing credentials" },
-            "401": { "description": "Invalid username or password" },
-            "500": { "description": "Internal server error" }
-          }
-        }
-      },
-  
-      "/api/users/refreshToken": {
-        "post": {
-          "tags": ["User"],
-          "summary": "Refresh access token",
-          "description": "Generates a new access token from a refresh token",
-          "parameters": [
-            {
-              "in": "body",
-              "name": "body",
-              "required": true,
-              "schema": { "$ref": "#/definitions/RefreshTokenRequest" }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "New access token",
-              "schema": { "$ref": "#/definitions/AccessTokenResponse" }
-            },
-            "401": { "description": "Refresh token is required" },
-            "403": { "description": "Invalid or expired refresh token" }
-          }
-        }
-      },
-  
-      "/api/users/logout": {
-        "delete": {
-          "tags": ["User"],
-          "summary": "Logout user",
-          "description": "Invalidates refresh token and updates user activity",
-          "parameters": [
-            {
-              "in": "header",
-              "name": "Authorization",
-              "required": true,
-              "type": "string"
-            },
-            {
-              "in": "body",
-              "name": "body",
-              "required": true,
-              "schema": { "$ref": "#/definitions/RefreshTokenRequest" }
-            }
-          ],
-          "responses": {
-            "204": { "description": "Logged out successfully" },
-            "400": { "description": "Missing refresh token or not authenticated" },
-            "500": { "description": "Internal server error" }
-          }
-        }
-      },
-  
-      "/api/users/editProfile": {
-        "patch": {
-          "tags": ["User"],
-          "summary": "Edit user profile",
-          "description": "Updates user profile fields",
-          "parameters": [
-            {
-              "in": "header",
-              "name": "Authorization",
-              "required": true,
-              "type": "string"
-            },
-            {
-              "in": "body",
-              "name": "body",
-              "schema": { "$ref": "#/definitions/EditProfileRequest" }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Profile updated successfully",
-              "schema": { "$ref": "#/definitions/UpdatedUserResponse" }
-            },
-            "404": { "description": "User not found" },
-            "500": { "description": "Internal server error" }
-          }
-        }
-      },
-  
-      "/api/users/deleteUser": {
-        "delete": {
-          "tags": ["User"],
-          "summary": "Delete user account",
-          "description": "Deletes authenticated user's account",
-          "parameters": [
-            {
-              "in": "header",
-              "name": "Authorization",
-              "required": true,
-              "type": "string"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "User deleted successfully",
-              "schema": { "$ref": "#/definitions/MessageResponse" }
-            },
-            "404": { "description": "User not found" },
-            "500": { "description": "Internal server error" }
-          }
+        },
+        "responses": {
+          "201": { "description": "Borrow request created" },
+          "400": { "description": "Resource not available or missing dates" },
+          "500": { "description": "Failed to create borrow request" }
         }
       }
     },
-  
-    "definitions": {
-      "RegisterUser": {
+    "/api/borrowings/:id/approve": {
+      "post": {
+        "summary": "Owner approves a borrow request",
+        "tags": ["Borrowings"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Borrow request approved" },
+          "400": { "description": "Borrow cannot be approved" },
+          "500": { "description": "Failed to approve borrow request" }
+        }
+      }
+    },
+    "/api/borrowings/:id/reject": {
+      "post": {
+        "summary": "Owner rejects a borrow request",
+        "tags": ["Borrowings"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Borrow request rejected" },
+          "400": { "description": "Borrow cannot be rejected" },
+          "500": { "description": "Failed to reject borrow request" }
+        }
+      }
+    },
+    "/api/borrowings/history": {
+      "get": {
+        "summary": "Get own borrowings history",
+        "tags": ["Borrowings"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of borrowings" },
+          "500": { "description": "Failed to fetch borrow history" }
+        }
+      }
+    },
+    "/api/borrowings/:id/history": {
+      "get": {
+        "summary": "Get borrowings history for a specific user (admin/moderator)",
+        "tags": ["Borrowings"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "User borrowings" },
+          "500": { "description": "Failed to fetch user borrowings" }
+        }
+      }
+    },
+    "/api/borrowings/all": {
+      "get": {
+        "summary": "Get all borrowings (admin/moderator)",
+        "tags": ["Borrowings"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "All borrowings" },
+          "500": { "description": "Failed to fetch borrowings" }
+        }
+      }
+    },
+    "/api/purchases/:resourceId/purchase": {
+      "post": {
+        "summary": "Create a purchase request",
+        "tags": ["Purchases"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "resourceId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "201": { "description": "Purchase request created" },
+          "400": { "description": "Resource not available" },
+          "500": { "description": "Failed to create purchase" }
+        }
+      }
+    },
+    "/api/purchases/:resourceId/approve": {
+      "post": {
+        "summary": "Seller approves a purchase request",
+        "tags": ["Purchases"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "resourceId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Purchase request approved" },
+          "400": { "description": "Purchase cannot be approved" },
+          "500": { "description": "Failed to approve purchase request" }
+        }
+      }
+    },
+    "/api/purchases/:resourceId/reject": {
+      "post": {
+        "summary": "Seller rejects a purchase request",
+        "tags": ["Purchases"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "resourceId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Purchase request rejected" },
+          "400": { "description": "Purchase cannot be rejected" },
+          "500": { "description": "Failed to reject purchase request" }
+        }
+      }
+    },
+    "/api/purchases/history": {
+      "get": {
+        "summary": "Get own purchase history",
+        "tags": ["Purchases"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of purchases" },
+          "500": { "description": "Failed to fetch purchase history" }
+        }
+      }
+    },
+    "/api/purchases/:id/history": {
+      "get": {
+        "summary": "Get purchases history for a specific user (admin/moderator)",
+        "tags": ["Purchases"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "User purchases" },
+          "500": { "description": "Failed to fetch user purchases" }
+        }
+      }
+    },
+    "/api/purchases/all": {
+      "get": {
+        "summary": "Get all purchases (admin/moderator)",
+        "tags": ["Purchases"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "All purchases" },
+          "500": { "description": "Failed to fetch all purchases" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" } },
+    "schemas": {
+      "Purchase": {
         "type": "object",
-        "required": ["username", "password", "email"],
         "properties": {
-          "username": { "type": "string" },
-          "password": { "type": "string" },
-          "email": { "type": "string" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "birthDate": { "type": "string", "format": "date" },
-          "userPhoto": { "type": "string" }
+          "id": { "type": "integer" },
+          "buyerId": { "type": "integer" },
+          "resourceId": { "type": "integer" },
+          "sellerId": { "type": "integer" },
+          "statusId": { "type": "integer" },
+          "agreedPrice": { "type": "number" },
+          "createdAt": { "type": "string", "format": "date-time" }
         }
       },
-  
-      "LoginUser": {
-        "type": "object",
-        "required": ["username", "password"],
-        "properties": {
-          "username": { "type": "string" },
-          "password": { "type": "string" }
-        }
-      },
-  
-      "RefreshTokenRequest": {
+      "Borrowing": {
         "type": "object",
         "properties": {
-          "token": { "type": "string" }
-        }
-      },
-  
-      "EditProfileRequest": {
-        "type": "object",
-        "properties": {
-          "username": { "type": "string" },
-          "email": { "type": "string" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "userPhoto": { "type": "string" }
-        }
-      },
-  
-      "LoginResponse": {
-        "type": "object",
-        "properties": {
-          "accessToken": { "type": "string" },
-          "refreshToken": { "type": "string" }
-        }
-      },
-  
-      "AccessTokenResponse": {
-        "type": "object",
-        "properties": {
-          "accessToken": { "type": "string" }
-        }
-      },
-  
-      "UpdatedUserResponse": {
-        "type": "object",
-        "properties": {
-          "message": { "type": "string" },
-          "user": { "$ref": "#/definitions/UserObject" }
-        }
-      },
-  
-      "MessageResponse": {
-        "type": "object",
-        "properties": {
-          "message": { "type": "string" }
-        }
-      },
-  
-      "UserObject": {
-        "type": "object",
-        "properties": {
-          "_id": { "type": "string" },
-          "username": { "type": "string" },
-          "email": { "type": "string" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "birthDate": { "type": "string", "format": "date" },
-          "userPhoto": { "type": "string" },
-          "lastAccess": { "type": "string", "format": "date-time" },
-          "activity": { "type": "number" }
+          "id": { "type": "integer" },
+          "borrowerId": { "type": "integer" },
+          "resourceId": { "type": "integer" },
+          "ownerId": { "type": "integer" },
+          "statusId": { "type": "integer" },
+          "startDate": { "type": "string", "format": "date-time" },
+          "endDate": { "type": "string", "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" }
         }
       }
     }
   }
-  
+}
