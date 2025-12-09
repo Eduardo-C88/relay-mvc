@@ -1,49 +1,48 @@
 name: CI — Build + Test All Services
 
 on:
-    push:
-        branches: [main, develop]
-    pull_request:
-        branches: [main, develop]
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
 
 jobs:
-    test-and-build:
-        runs-on: ubuntu-latest
+  test-and-build:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout repo
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "22"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
 
-            - name: Install root deps (se houver)
-              run: npm install
-              working-directory: ./
+      # Remove porque a raiz NÃO tem package.json
+      # - name: Install root deps
+      #   run: npm install
 
-            # For each service: install deps and run tests (if existir)
-            - name: Test resource-service
-              run: |
-                  cd resource-service
-                  npm install
-                  npm test || true
+      - name: Test resource-service
+        working-directory: ./resource-service
+        run: |
+          npm install
+          npm test || true
 
-            - name: Test transaction-service
-              run: |
-                  cd transaction-service
-                  npm install
-                  npm test || true
+      - name: Test transaction-service
+        working-directory: ./transaction-service
+        run: |
+          npm install
+          npm test || true
 
-            - name: Test user-service
-              run: |
-                  cd user-service
-                  npm install
-                  npm test || true
+      - name: Test user-service
+        working-directory: ./user-service
+        run: |
+          npm install
+          npm test || true
 
-            - name: Test gateway
-              run: |
-                  cd gateway
-                  npm install
-                  npm test || true
+      - name: Test gateway
+        working-directory: ./gateway
+        run: |
+          npm install
+          npm test || true
