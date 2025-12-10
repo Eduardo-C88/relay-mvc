@@ -49,8 +49,8 @@ services:
 
   # Auth service
   auth-service:
-    build: ./ed18c/user-service
-    env_file: ./ed18c/user-service/.env
+    build: ./user-service
+    env_file: ./user-service/.env
     depends_on:
       - auth_db
       - rabbitmq
@@ -59,8 +59,8 @@ services:
 
   # Resource service
   resource-service:
-    build: ./ed18c/resource-service
-    env_file: ./ed18c/resource-service/.env
+    build: ./resource-service
+    env_file: ./resource-service/.env
     depends_on:
       - resource_db
       - rabbitmq
@@ -69,8 +69,8 @@ services:
 
   # Transaction service
   transaction-service:
-    build: ./ed18c/transaction-service
-    env_file: ./ed18c/transaction-service/.env
+    build: ./transaction-service
+    env_file: ./transaction-service/.env
     depends_on:
       - transaction_db
       - rabbitmq
@@ -79,8 +79,8 @@ services:
 
   # Gateway service
   gateway-service:
-    build: ./ed18c/gateway-service
-    env_file: ./ed18c/gateway-service/.env
+    build: ./gateway
+    env_file: ./gateway/.env
     depends_on:
       - auth-service
       - resource-service
