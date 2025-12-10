@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-transaction-config
+  namespace: relay
+data:
+  postgres-transaction-host: transaction-service
+  postgres-transaction-db: relay_transaction_db 
+  postgres-transaction-port: "5432"

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-user-config
+  namespace: relay
+data:
+  postgres-user-host: postgres-user-service
+  postgres-user-db: relay_user_db
+  postgres-user-port: "5432"

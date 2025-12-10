@@ -1,0 +1,106 @@
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: postgres-resource-pv
+#   namespace: relay
+#   labels:
+#     type: local
+#     app: postgres
+# spec:
+#   storageClassName: manual
+#   capacity:
+#     storage: 5Gi
+#   accessModes: [ReadWriteOnce]
+#   hostPath:
+#     path: /mnt/data/postgres/resource
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: postgres-resource-pvc
+#   namespace: relay
+#   labels:
+#     app: postgres
+# spec:
+#   storageClassName: manual
+#   accessModes: [ReadWriteOnce]
+#   resources:
+#     requests:
+#       storage: 5Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-resource
+  namespace: relay
+  labels:
+    app: postgres
+    role: resource
+spec:
+  serviceName: postgres-resource-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+      role: resource
+  template:
+    metadata:
+      labels:
+        app: postgres
+        role: resource
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: postgres-resource-secrets
+                key: POSTGRES_USER
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: postgres-resource-secrets
+                key: POSTGRES_PASSWORD
+          - name: POSTGRES_DB
+            value: resource_db
+          - name: PGDATA
+            value: /var/lib/postgresql/data/pgdata
+        readinessProbe:
+          exec:
+            command: ["/usr/bin/pg_isready", "-U", "$(POSTGRES_USER)"]
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        volumeMounts:
+          - name: postgres-data
+            mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+    name: postgres-data
+  spec:
+    accessModes: ["ReadWriteOnce"]
+    storageClassName: "standard"
+    resources:
+      requests:
+        storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-resource-service
+  namespace: relay
+  labels:
+    app: postgres
+    role: resource  
+spec:
+  ports:
+  - port: 5432
+    targetPort: 5432
+  clusterIP: None
+  selector:
+    app: postgres
+    role: resource

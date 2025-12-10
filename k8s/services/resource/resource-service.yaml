@@ -1,0 +1,131 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resource-service
+  namespace: relay
+  labels:
+    app: resource-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: resource-service
+  template:
+    metadata:
+      labels:
+        app: resource-service
+    spec:
+      containers:
+      - name: resource-service
+        image: ed18c/resource-service:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+          - name: DATABASE_URL
+            value: "postgresql://resource_user:resource_password@postgres-resource-service.relay.svc.cluster.local:5432/resource_db"
+          - name: USER_SERVICE_URL
+            value: http://user-service.relay.svc.cluster.local:3001
+          - name: RESOURCE_SERVICE_URL
+            value: http://resource-service.relay.svc.cluster.local:3002
+          - name: TRANSACTION_SERVICE_URL
+            value: http://transaction-service.relay.svc.cluster.local:3003
+          - name: JWT_ACCESS_TOKEN_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: jwt-secrets
+                key: ACCESS_TOKEN_SECRET
+          - name: JWT_REFRESH_TOKEN_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: jwt-secrets
+                key: REFRESH_TOKEN_SECRET
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: resource-service
+  namespace: relay
+  labels:
+    app: resource-service
+spec:
+  type: ClusterIP
+  selector:
+    app: resource-service
+  ports:
+    - port: 3002
+      targetPort: 8080
+      protocol: TCP
+
+# apiVersion: v1
+# kind: Deployment
+# metadata:
+#   name: resource-service
+#   namespace: relay
+#   labels:
+#     app: resource-service
+# spec:
+#   replicas: 2
+#   selector:
+#     matchLabels:
+#       app: resource-service
+#   template:
+#     metadata:
+#       labels:
+#         app: resource-service
+#     spec:
+#       containers:
+#       - name: resource-service
+#         image: ed18c/resource-service:latest
+#         ports:
+#         - containerPort: 8080
+#         resources:
+#           requests:
+#             memory: "256Mi"
+#             cpu: "250m"
+#           limits:
+#             memory: "512Mi"
+#             cpu: "500m"
+#         env:
+#           - name: DATABASE_URL
+#             value: "postgresql://resource_user:resource_password@postgres-resource-service.relay.svc.cluster.local:5432/resource_db"
+#           - name: USER_SERVICE_URL
+#             value: http://user-service.relay.svc.cluster.local
+#           - name: RESOURCE_SERVICE_URL
+#             value: http://resource-service.relay.svc.cluster.local
+#           - name: TRANSACTION_SERVICE_URL
+#             value: http://transaction-service.relay.svc.cluster.local
+
+#           - name: JWT_ACCESS_TOKEN_SECRET
+#             valueFrom:
+#               secretKeyRef:
+#                 name: jwt-secrets
+#                 key: ACCESS_TOKEN_SECRET
+
+#           - name: JWT_REFRESH_TOKEN_SECRET
+#             valueFrom:
+#               secretKeyRef:
+#                 name: jwt-secrets
+#                 key: REFRESH_TOKEN_SECRET
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: resource-service
+#   namespace: relay
+#   labels:
+#     app: resource-service
+# spec:
+#   type: ClusterIP
+#   selector:
+#     app: resource-service
+#   ports:
+#     - port: 3002
+#       targetPort: 3002
+#       protocol: TCP
