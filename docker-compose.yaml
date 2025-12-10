@@ -1,4 +1,5 @@
 version: "3.9"
+
 services:
   auth_db:
     image: postgres:16
@@ -11,6 +12,7 @@ services:
       - "5432:5432"
     volumes:
       - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
   resource_db:
     image: postgres:16
     container_name: resource-mvc-prisma-db
@@ -22,6 +24,7 @@ services:
       - "5433:5432"
     volumes:
       - ./sql/resource_init.sql:/docker-entrypoint-initdb.d/init.sql
+
   transaction_db:
     image: postgres:16
     container_name: transaction-mvc-prisma-db
@@ -33,6 +36,7 @@ services:
       - "5434:5432"
     volumes:
       - ./sql/transaction_init.sql:/docker-entrypoint-initdb.d/init.sql
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
@@ -42,3 +46,44 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
+
+  # Auth service
+  auth-service:
+    build: ./ed18c/user-service
+    env_file: ./ed18c/user-service/.env
+    depends_on:
+      - auth_db
+      - rabbitmq
+    ports:
+      - "3001:3001"
+
+  # Resource service
+  resource-service:
+    build: ./ed18c/resource-service
+    env_file: ./ed18c/resource-service/.env
+    depends_on:
+      - resource_db
+      - rabbitmq
+    ports:
+      - "3002:3002"
+
+  # Transaction service
+  transaction-service:
+    build: ./ed18c/transaction-service
+    env_file: ./ed18c/transaction-service/.env
+    depends_on:
+      - transaction_db
+      - rabbitmq
+    ports:
+      - "3003:3003"
+
+  # Gateway service
+  gateway-service:
+    build: ./ed18c/gateway-service
+    env_file: ./ed18c/gateway-service/.env
+    depends_on:
+      - auth-service
+      - resource-service
+      - transaction-service
+    ports:
+      - "3000:3000"
