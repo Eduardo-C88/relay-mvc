@@ -4,6 +4,6 @@ metadata:
   name: postgres-resource-config
   namespace: relay
 data:
-  postgres-resource-host: resource-service
   postgres-resource-db: relay_resource_db
+  postgres-resource-host: postgres-resource-service
   postgres-resource-port: "5432"

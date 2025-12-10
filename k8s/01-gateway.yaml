@@ -19,6 +19,9 @@ spec:
         image: ed18c/gateway-service:latest
         ports:
         - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: api-gateway-config
         resources:
           requests:
             memory: "256Mi"
@@ -28,7 +31,7 @@ spec:
             cpu: "500m"
         livenessProbe:
           httpGet:
-            path: /actuator/health
+            path: /health/live
             port: 8080
           initialDelaySeconds: 30
           periodSeconds: 10
@@ -36,7 +39,7 @@ spec:
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /actuator/health
+            path: /health/ready
             port: 8080
           initialDelaySeconds: 5
           periodSeconds: 5

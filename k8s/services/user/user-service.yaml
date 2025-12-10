@@ -54,12 +54,12 @@ spec:
             secretKeyRef:
               name: postgres-user-secrets
               key: POSTGRES_PASSWORD
-        - name: JWT_ACCESS_TOKEN_SECRET
+        - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
               name: jwt-secrets
               key: ACCESS_TOKEN_SECRET
-        - name: JWT_REFRESH_TOKEN_SECRET
+        - name: REFRESH_JWT_SECRET
           valueFrom:
             secretKeyRef:
               name: jwt-secrets
