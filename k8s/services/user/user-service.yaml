@@ -20,7 +20,7 @@ spec:
       - name: user-service
         image: ed18c/user-service:latest
         ports:
-        - containerPort: 8080
+        - containerPort: 3001
         resources:
           requests:
             memory: "256Mi"
@@ -29,8 +29,6 @@ spec:
             memory: "512Mi"
             cpu: "500m"
         env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "kubernetes"
         - name: POSTGRES_HOST
           valueFrom:
             configMapKeyRef:
@@ -68,14 +66,14 @@ spec:
               key: REFRESH_TOKEN_SECRET
         livenessProbe:
           httpGet:
-            path: /actuator/health
-            port: 8080
+            path: /health
+            port: 3001
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /actuator/health/readiness
-            port: 8080
+            path: /health/ready
+            port: 3001
           initialDelaySeconds: 5
           periodSeconds: 5
 ---
@@ -90,5 +88,5 @@ spec:
     app: user-service
   ports:
   - port: 3001
-    targetPort: 8080
+    targetPort: 3001
     protocol: TCP
