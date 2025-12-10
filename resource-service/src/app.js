@@ -12,6 +12,7 @@ const {
 
 // App Routes
 const resourcesRoutes = require("./routes/resourcesRoutes");
+const healthRoutes = require("./routes/healthRoutes");
 
 require("dotenv").config();
 
@@ -35,5 +36,6 @@ app.use("/apidoc", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // app.use Routes
 app.use(resourcesRoutes);
+app.use(healthRoutes);
 
 module.exports = app;

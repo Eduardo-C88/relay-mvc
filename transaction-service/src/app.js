@@ -9,6 +9,7 @@ const { initTransactionPublisher } = require("./events/transactionPublisher");
 // App Routes
 const purchasesRoutes = require("./routes/purchasesRoutes");
 const borrowingRoutes = require("./routes/borrowingRoutes");
+const healthRoutes = require("./routes/healthRoutes");
 
 require("dotenv").config();
 
@@ -33,6 +34,6 @@ app.use("/apidoc", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // app.use Routes
 app.use(borrowingRoutes);
 app.use(purchasesRoutes);
-
+app.use(healthRoutes);
 
 module.exports = app;

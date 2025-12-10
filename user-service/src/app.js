@@ -8,6 +8,7 @@ const { initUserPublisher } = require("./events/userPublisher");
 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const healthRoutes = require('./routes/healthRoutes');
 
 require('dotenv').config();
 
@@ -29,5 +30,6 @@ app.use('/apidoc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(authRoutes);
 app.use(userRoutes);
+app.use(healthRoutes);
  
 module.exports = app;
