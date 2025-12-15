@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("REVIEW_DATABASE_URL")
+}
+
+////////////////////////////////////////////////////
+// ENUMS
+////////////////////////////////////////////////////
+
+enum TransactionType {
+  BORROW
+  PURCHASE
+}
+
+enum RoleType {
+  BUYER
+  SELLER
+}
+
+////////////////////////////////////////////////////
+// MODELS
+////////////////////////////////////////////////////
+
+model Review {
+  id               Int              @id @default(autoincrement())
+
+  reviewerId       Int              // user que avalia
+  reviewedUserId   Int              // user avaliado
+
+  resourceId       Int?
+  transactionId    Int
+  transactionType  TransactionType
+
+  roleType         RoleType         // BUYER | SELLER
+  rating           Int              @db.SmallInt
+  comment          String?
+
+  createdAt        DateTime         @default(now())
+
+  @@unique([reviewerId, transactionId, roleType])
+  @@index([reviewedUserId])
+  @@index([reviewerId])
+  @@index([transactionId])
+}
+
+model UserReputation {
+  userId           Int              @id
+
+  sellerRating     Float            @default(0.0)
+  sellerReviews    Int              @default(0)
+
+  buyerRating      Float            @default(0.0)
+  buyerReviews     Int              @default(0)
+
+  lastUpdated      DateTime         @default(now())
+}
