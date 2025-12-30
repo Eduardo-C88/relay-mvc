@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messaging Service API Documentation</title>
+    <link rel="icon" type="image/x-icon" href="/doc/assets/favicon.ico">
+    <link rel="stylesheet" href="/doc/assets/main.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💬 Messaging Service API</h1>
+            <p class="subtitle">Real-time messaging and conversations for Relay MVC</p>
+        </header>
+
+        <section class="endpoint-section">
+            <h2>Base URL</h2>
+            <code class="code-block">http://localhost:3005</code>
+        </section>
+
+        <section class="endpoint-section">
+            <h2>Conversations</h2>
+
+            <div class="endpoint">
+                <div class="method get">GET</div>
+                <div class="path">/conversations/:userId</div>
+                <p>Get all conversations for a specific user</p>
+                <h4>Parameters:</h4>
+                <ul>
+                    <li><code>userId</code> (string) - User ID</li>
+                </ul>
+                <h4>Response:</h4>
+                <pre><code>{
+  "conversations": [
+    {
+      "id": "uuid",
+      "borrowRequestId": "uuid",
+      "lastMessageAt": "2025-12-30T19:00:00.000Z",
+      "createdAt": "2025-12-30T19:00:00.000Z",
+      "participants": [
+        {
+          "id": "uuid",
+          "userId": "string"
+        }
+      ]
+    }
+  ]
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="method post">POST</div>
+                <div class="path">/conversations</div>
+                <p>Create a new conversation</p>
+                <h4>Body:</h4>
+                <pre><code>{
+  "participantIds": ["userId1", "userId2"],
+  "borrowRequestId": "uuid" // optional
+}</code></pre>
+                <h4>Response:</h4>
+                <pre><code>{
+  "conversation": {
+    "id": "uuid",
+    "borrowRequestId": "uuid",
+    "lastMessageAt": null,
+    "createdAt": "2025-12-30T19:00:00.000Z"
+  }
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="method get">GET</div>
+                <div class="path">/conversations/:id</div>
+                <p>Get a specific conversation with all messages</p>
+                <h4>Parameters:</h4>
+                <ul>
+                    <li><code>id</code> (string) - Conversation ID</li>
+                </ul>
+                <h4>Response:</h4>
+                <pre><code>{
+  "conversation": {
+    "id": "uuid",
+    "borrowRequestId": "uuid",
+    "lastMessageAt": "2025-12-30T19:00:00.000Z",
+    "createdAt": "2025-12-30T19:00:00.000Z",
+    "participants": [...],
+    "messages": [...]
+  }
+}</code></pre>
+            </div>
+        </section>
+
+        <section class="endpoint-section">
+            <h2>Messages</h2>
+
+            <div class="endpoint">
+                <div class="method post">POST</div>
+                <div class="path">/messages</div>
+                <p>Send a new message in a conversation</p>
+                <h4>Body:</h4>
+                <pre><code>{
+  "conversationId": "uuid",
+  "fromUser": "userId",
+  "toUser": "userId",
+  "text": "Message content"
+}</code></pre>
+                <h4>Response:</h4>
+                <pre><code>{
+  "message": {
+    "id": "uuid",
+    "conversationId": "uuid",
+    "fromUser": "userId",
+    "toUser": "userId",
+    "text": "Message content",
+    "createdAt": "2025-12-30T19:00:00.000Z"
+  }
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="method get">GET</div>
+                <div class="path">/messages/:conversationId</div>
+                <p>Get all messages in a conversation</p>
+                <h4>Parameters:</h4>
+                <ul>
+                    <li><code>conversationId</code> (string) - Conversation ID</li>
+                </ul>
+                <h4>Query Parameters:</h4>
+                <ul>
+                    <li><code>limit</code> (number, optional) - Number of messages to return (default: 50)</li>
+                    <li><code>before</code> (string, optional) - Get messages before this timestamp</li>
+                </ul>
+                <h4>Response:</h4>
+                <pre><code>{
+  "messages": [
+    {
+      "id": "uuid",
+      "conversationId": "uuid",
+      "fromUser": "userId",
+      "toUser": "userId",
+      "text": "Message content",
+      "createdAt": "2025-12-30T19:00:00.000Z"
+    }
+  ]
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="method delete">DELETE</div>
+                <div class="path">/messages/:id</div>
+                <p>Delete a message</p>
+                <h4>Parameters:</h4>
+                <ul>
+                    <li><code>id</code> (string) - Message ID</li>
+                </ul>
+                <h4>Response:</h4>
+                <pre><code>{
+  "message": "Message deleted successfully"
+}</code></pre>
+            </div>
+        </section>
+
+        <section class="endpoint-section">
+            <h2>WebSocket Events</h2>
+            <p>Connect to WebSocket for real-time messaging:</p>
+            <code class="code-block">ws://localhost:3005</code>
+            
+            <h3 style="margin-top: 30px;">Events:</h3>
+            <div class="endpoint">
+                <h4>Client → Server</h4>
+                <ul>
+                    <li><code>join_conversation</code> - Join a conversation room</li>
+                    <li><code>send_message</code> - Send a message to a conversation</li>
+                    <li><code>typing</code> - Notify that user is typing</li>
+                </ul>
+            </div>
+
+            <div class="endpoint">
+                <h4>Server → Client</h4>
+                <ul>
+                    <li><code>new_message</code> - New message received in conversation</li>
+                    <li><code>user_typing</code> - Another user is typing</li>
+                    <li><code>message_deleted</code> - A message was deleted</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="endpoint-section">
+            <h2>Health Check</h2>
+
+            <div class="endpoint">
+                <div class="method get">GET</div>
+                <div class="path">/health</div>
+                <p>Check service health</p>
+                <h4>Response:</h4>
+                <pre><code>{
+  "status": "ok",
+  "timestamp": "2025-12-30T19:00:00.000Z"
+}</code></pre>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

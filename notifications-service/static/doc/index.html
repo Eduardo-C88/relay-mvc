@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Service API Documentation</title>
+    <link rel="icon" type="image/x-icon" href="/doc/assets/favicon.ico">
+    <link rel="stylesheet" href="/doc/assets/main.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔔 Notification Service API</h1>
+            <p class="subtitle">Real-time notifications for Relay MVC</p>
+        </header>
+
+        <section class="endpoint-section">
+            <h2>Base URL</h2>
+            <code class="code-block">http://localhost:3004</code>
+        </section>
+
+        <section class="endpoint-section">
+            <h2>Endpoints</h2>
+
+            <div class="endpoint">
+                <div class="method get">GET</div>
+                <div class="path">/notifications/:userId</div>
+                <p>Get all notifications for a specific user</p>
+                <h4>Parameters:</h4>
+                <ul>
+                    <li><code>userId</code> (string) - User ID</li>
+                </ul>
+                <h4>Response:</h4>
+                <pre><code>{
+  "notifications": [
+    {
+      "id": "uuid",
+      "userId": "string",
+      "type": "string",
+      "message": "string",
+      "read": false,
+      "createdAt": "2025-12-30T19:00:00.000Z"
+    }
+  ]
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="method post">POST</div>
+                <div class="path">/notifications</div>
+                <p>Create a new notification</p>
+                <h4>Body:</h4>
+                <pre><code>{
+  "userId": "string",
+  "type": "string",
+  "message": "string"
+}</code></pre>
+                <h4>Response:</h4>
+                <pre><code>{
+  "notification": {
+    "id": "uuid",
+    "userId": "string",
+    "type": "string",
+    "message": "string",
+    "read": false,
+    "createdAt": "2025-12-30T19:00:00.000Z"
+  }
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="method patch">PATCH</div>
+                <div class="path">/notifications/:id/read</div>
+                <p>Mark a notification as read</p>
+                <h4>Parameters:</h4>
+                <ul>
+                    <li><code>id</code> (string) - Notification ID</li>
+                </ul>
+                <h4>Response:</h4>
+                <pre><code>{
+  "notification": {
+    "id": "uuid",
+    "read": true
+  }
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="method delete">DELETE</div>
+                <div class="path">/notifications/:id</div>
+                <p>Delete a notification</p>
+                <h4>Parameters:</h4>
+                <ul>
+                    <li><code>id</code> (string) - Notification ID</li>
+                </ul>
+                <h4>Response:</h4>
+                <pre><code>{
+  "message": "Notification deleted successfully"
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="method get">GET</div>
+                <div class="path">/health</div>
+                <p>Check service health</p>
+                <h4>Response:</h4>
+                <pre><code>{
+  "status": "ok",
+  "timestamp": "2025-12-30T19:00:00.000Z"
+}</code></pre>
+            </div>
+        </section>
+
+        <section class="endpoint-section">
+            <h2>Event Consumption</h2>
+            <p>This service consumes events from RabbitMQ to automatically create notifications:</p>
+            <ul>
+                <li><strong>resource.created</strong> - When a new resource is created</li>
+                <li><strong>transaction.completed</strong> - When a transaction is completed</li>
+                <li><strong>review.created</strong> - When a new review is posted</li>
+            </ul>
+        </section>
+    </div>
+</body>
+</html>

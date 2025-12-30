@@ -1,5 +1,27 @@
 version: "3.9"
 services:
+  messaging_db:
+    image: postgres:16
+    container_name: messaging-mvc-prisma-db
+    environment:
+      POSTGRES_USER: messaging_user
+      POSTGRES_PASSWORD: messaging_password
+      POSTGRES_DB: messaging_db
+    ports:
+      - "5437:5432"
+    volumes:
+      - ./sql/messaging_init.sql:/docker-entrypoint-initdb.d/init.sql
+  notification_db:
+    image: postgres:16
+    container_name: notification-mvc-prisma-db
+    environment:
+      POSTGRES_USER: notification_user
+      POSTGRES_PASSWORD: notification_password
+      POSTGRES_DB: notification_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - ./sql/notification_init.sql:/docker-entrypoint-initdb.d/init.sql
   auth_db:
     image: postgres:16
     container_name: auth-mvc-prisma-db
