@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo para armazenar eventos/atividades na plataforma
+model ActivityLog {
+  id          String   @id @default(uuid())
+  userId      String
+  userName    String?
+  eventType   String   // LOGIN, RESOURCE_CREATED, BORROWING_REQUEST, etc.
+  entityType  String?  // RESOURCE, BORROWING, REVIEW, USER
+  entityId    String?
+  metadata    Json?    // Dados adicionais sobre o evento
+  timestamp   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([eventType])
+  @@index([timestamp])
+  @@map("activity_logs")
+}
+
+// Modelo para estatísticas agregadas diárias
+model DailyStats {
+  id                    String   @id @default(uuid())
+  date                  DateTime @unique
+  totalUsers            Int      @default(0)
+  newUsers              Int      @default(0)
+  activeUsers           Int      @default(0)
+  totalResources        Int      @default(0)
+  newResources          Int      @default(0)
+  totalBorrowings       Int      @default(0)
+  newBorrowings         Int      @default(0)
+  completedBorrowings   Int      @default(0)
+  totalReviews          Int      @default(0)
+  newReviews            Int      @default(0)
+  avgRating             Float?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([date])
+  @@map("daily_stats")
+}
+
+// Modelo para ranking de recursos mais populares
+model ResourceStats {
+  id                String   @id @default(uuid())
+  resourceId        String   @unique
+  resourceTitle     String
+  ownerId           String
+  ownerName         String?
+  category          String?
+  totalBorrowings   Int      @default(0)
+  totalViews        Int      @default(0)
+  avgBorrowingDays  Float?
+  lastBorrowedAt    DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([totalBorrowings])
+  @@index([totalViews])
+  @@index([category])
+  @@map("resource_stats")
+}
+
+// Modelo para ranking de utilizadores
+model UserStats {
+  id                      String   @id @default(uuid())
+  userId                  String   @unique
+  userName                String
+  totalResourcesShared    Int      @default(0)
+  totalResourcesBorrowed  Int      @default(0)
+  totalReviewsGiven       Int      @default(0)
+  totalReviewsReceived    Int      @default(0)
+  avgRatingReceived       Float?
+  avgRatingGiven          Float?
+  reputationScore         Float    @default(0)
+  lastActiveAt            DateTime?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  
+  @@index([reputationScore])
+  @@index([totalResourcesShared])
+  @@map("user_stats")
+}
+
+// Modelo para relatórios agendados
+model Report {
+  id          String   @id @default(uuid())
+  title       String
+  type        String   // DAILY, WEEKLY, MONTHLY, CUSTOM
+  period      String   // Período do relatório
+  data        Json     // Dados do relatório em JSON
+  generatedBy String?  // ID do admin que gerou
+  createdAt   DateTime @default(now())
+  
+  @@index([type])
+  @@index([createdAt])
+  @@map("reports")
+}
