@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/adapter-pg": "^7.1.0",
+    "@prisma/adapter-pg": "^7.0.1",
     "@prisma/client": "^6.19.0",
     "amqplib": "^0.10.9",
     "apidoc": "^1.2.0",
