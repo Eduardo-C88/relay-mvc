@@ -25,7 +25,7 @@ CREATE TABLE role (
     name TEXT NOT NULL UNIQUE
 );
 
-CREATE TABLE "user" (
+CREATE TABLE users (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
@@ -44,14 +44,14 @@ CREATE TABLE "user" (
 );
 
 -- ⚡ Performance: Index ALL foreign keys
-CREATE INDEX idx_user_course_id ON "user"(course_id);
-CREATE INDEX idx_user_university_id ON "user"(university_id);
-CREATE INDEX idx_user_role_id ON "user"(role_id);
+CREATE INDEX idx_user_course_id ON users(course_id);
+CREATE INDEX idx_user_university_id ON users(university_id);
+CREATE INDEX idx_user_role_id ON users(role_id);
 
 CREATE TABLE refresh_token (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     token TEXT NOT NULL UNIQUE,
-    user_id INT REFERENCES "user"(id) ON DELETE CASCADE,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT now(),
     expires_at TIMESTAMP NOT NULL
 );
@@ -72,6 +72,6 @@ END;
 $$ language 'plpgsql';
 
 CREATE TRIGGER update_user_updated_at
-    BEFORE UPDATE ON "user"
+    BEFORE UPDATE ON users
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();

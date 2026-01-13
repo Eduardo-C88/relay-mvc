@@ -19,7 +19,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-      
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
@@ -37,11 +37,14 @@ services:
     environment:
       JWT_SECRET: your_jwt_secret_key
       REFRESH_JWT_SECRET: your_refresh_token_secret_key
-      AUTH_DATABASE_URL: postgres://auth_user:auth_password@auth_db:5432/auth_db
+      AUTH_DATABASE_URL: postgres://postgres:postgres@postgres_cluster:5432/auth_db
       AUTH_PORT: 3001
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
     depends_on:
-      auth_db:
+      postgres_cluster:
         condition: service_healthy
       rabbitmq:
         condition: service_started
+
+volumes:
+  postgres_data:

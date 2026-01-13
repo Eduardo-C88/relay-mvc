@@ -6,7 +6,7 @@ const { publishUserCreated } = require("../events/userPublisher");
 exports.register = async ({ name, email, password }) => {
     // Check if user already exists
     const existingUser = await db
-        .selectFrom('user')
+        .selectFrom('users')
         .select('id')
         .where('email', '=', email)
         .executeTakeFirst();
@@ -20,7 +20,7 @@ exports.register = async ({ name, email, password }) => {
 
     // Create new user
     const newUser = await db
-        .insertInto('user')
+        .insertInto('users')
         .values({
             name,
             email,
@@ -44,7 +44,7 @@ exports.register = async ({ name, email, password }) => {
 exports.login = async ({ email, password }) => {
     // Find user by email
     const user = await db
-        .selectFrom('user')
+        .selectFrom('users')
         .selectAll()
         .where('email', '=', email)
         .executeTakeFirst();
@@ -89,7 +89,7 @@ exports.refreshToken = async (oldRefreshToken) => {
     }
 
     const user = await db
-        .selectFrom('user')
+        .selectFrom('users')
         .selectAll()
         .where('id', '=', payload.id)
         .executeTakeFirst();
@@ -140,7 +140,7 @@ exports.logout = async (refreshToken) => {
 
 exports.changePassword = async (userId, currentPassword, newPassword) => {
     const user = await db
-        .selectFrom('user')
+        .selectFrom('users')
         .select(['id', 'password'])
         .where('id', '=', userId)
         .executeTakeFirst();
@@ -155,7 +155,7 @@ exports.changePassword = async (userId, currentPassword, newPassword) => {
     await db.transaction().execute(async (trx) => {
         // Update password
         await trx
-            .updateTable('user')
+            .updateTable('users')
             .set({ password: hashedNewPassword })
             .where('id', '=', userId)
             .execute();
@@ -171,7 +171,7 @@ exports.changePassword = async (userId, currentPassword, newPassword) => {
 
 exports.deleteAccount = async (userId) => {
     await db
-        .deleteFrom('user')
+        .deleteFrom('users')
         .where('id', '=', userId)
         .execute();
 }

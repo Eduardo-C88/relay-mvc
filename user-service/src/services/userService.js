@@ -17,25 +17,25 @@ exports.getUserProfile = async (userId) => {
     //     }
     // });
     const user = await db
-        .selectFrom('user')
-        .leftJoin('course', 'user.course_id', 'course.id')
-        .leftJoin('university', 'user.university_id', 'university.id')
-        .leftJoin('role', 'user.role_id', 'role.id')
+        .selectFrom('users')
+        .leftJoin('course', 'users.course_id', 'course.id')
+        .leftJoin('university', 'users.university_id', 'university.id')
+        .leftJoin('role', 'users.role_id', 'role.id')
         .select([  
-            'user.id',
-            'user.name',
-            'user.email',
-            'user.reputation',
-            'user.address',
+            'users.id',
+            'users.name',
+            'users.email',
+            'users.reputation',
+            'users.address',
             'course.id as courseId',
             'course.name as courseName',
             'university.id as universityId',
             'university.name as universityName',
             'role.id as roleId',
             'role.name as roleName',
-            'user.created_at as createdAt',
+            'users.created_at as createdAt',
         ])
-        .where('user.id', '=', userId)
+        .where('users.id', '=', userId)
         .executeTakeFirst();
 
     if (!user) return null;
@@ -105,7 +105,7 @@ exports.updateUserProfile = async (userId, updateData) => {
     // 2. Perform the update
     // Kysely will only generate SQL for the keys present in fieldsToUpdate
     await db
-        .updateTable('user')
+        .updateTable('users')
         .set(fieldsToUpdate)
         .where('id', '=', userId)
         .execute();
