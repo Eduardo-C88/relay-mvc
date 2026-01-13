@@ -30,7 +30,7 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
   user-service:
-    image: ed18c/user-service:d6eb56f
+    image: ed18c/user-service:c19d876
     container_name: user-service
     ports:
       - "3001:3001"
