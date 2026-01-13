@@ -74,6 +74,19 @@ exports.updateUserProfile = async (userId, updateData) => {
 
     // 1. Build a dynamic update object
     // Only include fields if they exist in the updateData
+
+    // Optional: Add this inside updateUserProfile if both are provided
+    if (updateData.course_id && updateData.university_id) {
+        const match = await db
+            .selectFrom('course')
+            .select('id')
+            .where('id', '=', Number(updateData.course_id))
+            .where('university_id', '=', Number(updateData.university_id))
+            .executeTakeFirst();
+        
+        if (!match) throw new Error('Selected course does not belong to this university');
+    }
+
     const fieldsToUpdate = {};
     
     if (updateData.address !== undefined) fieldsToUpdate.address = updateData.address;
