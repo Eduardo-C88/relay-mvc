@@ -106,19 +106,19 @@ exports.updateUserProfile = async (req, res) => {
 
 exports.changeUserRole = async (req, res) => {
     try {
-        const userId = parseInt(req.params.id); // Target user ID
-        const { roleId } = req.body;            // New role ID from the body
+        const user_id = parseInt(req.params.id); // Target user ID
+        const { role_id } = req.body;            // New role ID from the body
         
         // Input validation: Ensure roleId is provided and is a number
-        if (!roleId || typeof roleId !== 'number' || roleId <= 0) {
+        if (!role_id || typeof role_id !== 'number' || role_id <= 0) {
             return res.status(400).json({ message: 'A valid roleId must be provided in the request body.' });
         }
         
-        const updatedUser = await userService.changeUserRole(userId, roleId);
+        const updatedUser = await userService.changeUserRole(user_id, role_id);
         
         // Handle case where target user ID does not exist
         if (!updatedUser) {
-             return res.status(404).json({ message: `User with ID ${userId} not found.` });
+             return res.status(404).json({ message: `User with ID ${user_id} not found.` });
         }
         
         return res.status(200).json(updatedUser);
