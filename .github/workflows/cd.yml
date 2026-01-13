@@ -2,7 +2,7 @@ name: CD — Build & Push Docker Images
 
 on:
     push:
-        branches: [main, develop]
+        branches: [main, develop, feature/*]
 
 jobs:
     deploy:
