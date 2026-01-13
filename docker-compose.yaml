@@ -2,7 +2,7 @@ version: "3.9"
 services:
   postgres_cluster:
     image: postgres:16
-    container_name: mvc-postgres-cluster
+    container_name: postgres-cluster
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -30,7 +30,7 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
   user-service:
-    image: ed18c/user-service:5c4fed1
+    image: ed18c/user-service:bf98cfc
     container_name: user-service
     ports:
       - "3001:3001"
