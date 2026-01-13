@@ -1,11 +1,16 @@
-const { prisma } = require('../models/prismaClient');
+const { db } = require('../db/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { publishUserCreated } = require("../events/userPublisher");
 
 exports.register = async ({ name, email, password }) => {
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await db
+        .selectFrom('user')
+        .select('id')
+        .where('email', '=', email)
+        .executeTakeFirst();
+
     if (existingUser) {
         throw { status: 400, message: 'User with this email already exists' };
     }
@@ -13,21 +18,22 @@ exports.register = async ({ name, email, password }) => {
     // encrypt password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await prisma.user.create({
-        data: {
-            name,   
+    // Create new user
+    const newUser = await db
+        .insertInto('user')
+        .values({
+            name,
             email,
             password: hashedPassword,
-        }
-    });
+        })
+        .returningAll()
+        .executeTakeFirst();
 
     // Publish UserCreated event
     publishUserCreated({
         userId: newUser.id,
         name: newUser.name,
         reputation: newUser.reputation,
-        university: newUser.university?.name,
-        course: newUser.course?.name,
     });
     
     // Do not return the password hash!
@@ -37,7 +43,12 @@ exports.register = async ({ name, email, password }) => {
 
 exports.login = async ({ email, password }) => {
     // Find user by email
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await db
+        .selectFrom('user')
+        .selectAll()
+        .where('email', '=', email)
+        .executeTakeFirst();
+
     if (!user) {
         throw new Error('There is no user with this email');
     }
@@ -48,19 +59,20 @@ exports.login = async ({ email, password }) => {
     }
 
     // Generate JWT token
-    const payload = { id: user.id, email: user.email, roleId: user.roleId };
+    const payload = { id: user.id, email: user.email, roleId: user.role_id };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
     const refreshToken = jwt.sign(payload, process.env.REFRESH_JWT_SECRET, { expiresIn: '7d' });
 
     // Store refresh token in DB
-    await prisma.refreshToken.create({
-        data: {
+    await db
+        .insertInto('refresh_token')
+        .values({
             token: refreshToken,
-            userId: user.id,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Calculate 7 days from now
-        }
-    });
+            user_id: user.id,
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        })
+        .execute();
 
     return { accessToken: token, refreshToken: refreshToken }
 };
@@ -76,84 +88,90 @@ exports.refreshToken = async (oldRefreshToken) => {
         throw new Error('Invalid refresh token');
     }
 
-    const user = await prisma.user.findUnique({ where: { id: payload.id } });
+    const user = await db
+        .selectFrom('user')
+        .selectAll()
+        .where('id', '=', payload.id)
+        .executeTakeFirst();
+
     if (!user) {
         // If the user was deleted but the token wasn't, revoke the token
-        await prisma.refreshToken.delete({ where: { token: oldRefreshToken } });
+        await db
+            .deleteFrom('refresh_token')
+            .where('token', '=', oldRefreshToken)
+            .execute();
+            
         throw new Error('Invalid refresh token');
     }
 
     // Check if the refresh token exists in DB
-    const storedToken = await prisma.refreshToken.findUnique({ where: { token: oldRefreshToken } });
+    const storedToken = await db
+        .selectFrom('refresh_token')
+        .selectAll()
+        .where('token', '=', oldRefreshToken)
+        .executeTakeFirst();
+
     if (!storedToken) {
         throw new Error('Invalid refresh token'); 
     }
     // Generate new tokens
-    const newPayload = { id: user.id, email: user.email, roleId: user.roleId };
+    const newPayload = { id: user.id, email: user.email, roleId: user.role_id };
     const newAccessToken = jwt.sign(newPayload, process.env.JWT_SECRET, { expiresIn: '1h' });
     const newRefreshToken = jwt.sign(newPayload, process.env.REFRESH_JWT_SECRET, { expiresIn: '7d' });
     // Store new refresh token and delete old one in a transaction
-    await prisma.$transaction([
-        prisma.refreshToken.delete({ where: { token: oldRefreshToken } }),
-        prisma.refreshToken.create({
-            data: {
-                token: newRefreshToken,
-                userId: payload.id,
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
-            }
-        })
-    ]);
+    await db.transaction().execute(async (trx) => {
+        await trx.deleteFrom('refresh_token').where('token', '=', oldRefreshToken).execute();
+        await trx.insertInto('refresh_token').values({
+            token: newRefreshToken,
+            user_id: payload.id,
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        }).execute();
+    });
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
 }
 
 exports.logout = async (refreshToken) => {
-    try {
-        // Use delete and specify the unique token field for deletion
-        await prisma.refreshToken.delete({ 
-            where: { token: refreshToken } 
-        });
-    } catch (error) {
-        // If the token wasn't found (P2025 error code), we can ignore it 
-        // because the goal (token revoked) is already achieved, or log it.
-        if (error.code === 'P2025') {
-            // Optional: Log that a non-existent token was requested for logout
-            console.warn('Logout requested for non-existent or already-revoked token.');
-            return; 
-        }
-        // Re-throw any actual database errors
-        throw error;
-    }
+    await db
+        .deleteFrom('refresh_token')
+        .where('token', '=', refreshToken)
+        .execute();
     return;
 }
 
 exports.changePassword = async (userId, currentPassword, newPassword) => {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-        throw new Error('User not found');
-    }
+    const user = await db
+        .selectFrom('user')
+        .select(['id', 'password'])
+        .where('id', '=', userId)
+        .executeTakeFirst();
+    if (!user) throw new Error('User not found');
+
     const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) {
-        throw new Error('Current password is incorrect');
-    }
+    if (!isMatch) throw new Error('Current password is incorrect');
+
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-    await prisma.user.update({
-        where: { id: userId },
-        data: { password: hashedNewPassword }
+
+    // Update password
+    await db.transaction().execute(async (trx) => {
+        // Update password
+        await trx
+            .updateTable('user')
+            .set({ password: hashedNewPassword })
+            .where('id', '=', userId)
+            .execute();
+
+        // Revoke all tokens for this user
+        await trx
+            .deleteFrom('refresh_token')
+            .where('user_id', '=', userId)
+            .execute();
     });
-    // Revoke all refresh tokens for this user
-    await prisma.refreshToken.deleteMany({
-        where: { userId: userId }
-    });
-    return;
-}
+};
+
 
 exports.deleteAccount = async (userId) => {
-    // Delete user and cascade delete refresh tokens
-    await prisma.refreshToken.deleteMany({
-        where: { userId: userId }
-    });
-    await prisma.user.delete({
-        where: { id: userId }
-    });
-    return;
+    await db
+        .deleteFrom('user')
+        .where('id', '=', userId)
+        .execute();
 }

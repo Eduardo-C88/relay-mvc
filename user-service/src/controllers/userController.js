@@ -65,13 +65,13 @@ exports.updateUserProfile = async (req, res) => {
         const userId = req.user.id; 
         
         // 1. FILTER/WHITELIST: Only allow permitted fields
-        const { address, courseId, universityId } = req.body;
+        const { address, course_id, university_id } = req.body;
 
         // 2. BUILD UPDATE OBJECT: Only include fields that were actually provided
         const updateData = {};
         if (address !== undefined) updateData.address = address;
-        if (courseId !== undefined) updateData.courseId = courseId;
-        if (universityId !== undefined) updateData.universityId = universityId;
+        if (course_id !== undefined) updateData.course_id = course_id;
+        if (university_id !== undefined) updateData.university_id = university_id;
         
         // Check if there's anything to update
         if (Object.keys(updateData).length === 0) {
