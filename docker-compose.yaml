@@ -45,6 +45,22 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_started
+  resource-service:
+    image: ed18c/resource-service:9a261a4
+    container_name: resource-service
+    ports:
+      - "3002:3002"
+    environment:
+      JWT_SECRET: your_jwt_secret_key
+      REFRESH_JWT_SECRET: your_refresh_token_secret_key
+      RESOURCE_DATABASE_URL: postgres://postgres:postgres@postgres_cluster:5432/resource_db
+      RESOURCE_PORT: 3002
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+    depends_on:
+      postgres_cluster:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
 
 volumes:
   postgres_data:

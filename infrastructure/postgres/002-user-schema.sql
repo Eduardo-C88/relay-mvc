@@ -76,3 +76,27 @@ CREATE TRIGGER update_user_updated_at
     BEFORE UPDATE ON users
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+
+
+    -- 5. Seed Universities
+INSERT INTO university (name, location, website) VALUES
+  ('University of Lisbon', 'Lisbon, Portugal', 'https://www.ulisboa.pt'),
+  ('University of Porto', 'Porto, Portugal', 'https://www.up.pt'),
+  ('University of Coimbra', 'Coimbra, Portugal', 'https://www.uc.pt'),
+  ('NOVA University Lisbon', 'Lisbon, Portugal', 'https://www.unl.pt'),
+  ('University of Minho', 'Braga, Portugal', 'https://www.uminho.pt')
+ON CONFLICT (name) DO NOTHING;
+
+
+-- 6. Seed Courses
+INSERT INTO course (name, university_id)
+SELECT 'Computer Science', id FROM university WHERE name = 'University of Lisbon'
+UNION ALL
+SELECT 'Software Engineering', id FROM university WHERE name = 'University of Porto'
+UNION ALL
+SELECT 'Information Systems', id FROM university WHERE name = 'University of Minho'
+UNION ALL
+SELECT 'Electrical Engineering', id FROM university WHERE name = 'University of Coimbra'
+UNION ALL
+SELECT 'Data Science', id FROM university WHERE name = 'NOVA University Lisbon'
+ON CONFLICT (name) DO NOTHING;
