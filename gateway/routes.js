@@ -17,6 +17,5 @@ module.exports = (app) => {
     app.use("/api/resources", createProxyMiddleware(proxyOptions(process.env.RESOURCES_SERVICE_URL)));
 
     // Transaction Service
-    app.use("/api/borrowings", createProxyMiddleware(proxyOptions(process.env.TRANSACTION_SERVICE_URL)));
-    app.use("/api/purchases", createProxyMiddleware(proxyOptions(process.env.TRANSACTION_SERVICE_URL)));
+    app.use("/api/operation", createProxyMiddleware(proxyOptions(process.env.OPERATION_SERVICE_URL)));
 };

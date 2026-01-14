@@ -2,9 +2,9 @@ name: CI — Build + Test All Services
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, feature/*]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, feature/*]
 
 jobs:
   test-and-build:
@@ -29,8 +29,8 @@ jobs:
           npm install
           npm test || true
 
-      - name: Test transaction-service
-        working-directory: ./transaction-service
+      - name: Test operation-service
+        working-directory: ./operation-service
         run: |
           npm install
           npm test || true

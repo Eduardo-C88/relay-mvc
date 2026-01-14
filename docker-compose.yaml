@@ -1,83 +1,25 @@
 version: "3.9"
 services:
-  analytics-db:
+  postgres_cluster:
     image: postgres:16
-    container_name: relay-analytics-db
+    container_name: postgres-cluster
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: analytics_db
-    ports:
-      - "5438:5432"
-    volumes:
-      - ./sql/transaction_init.sql:/docker-entrypoint-initdb.d/init.sql
-
-  messaging_db:
-    image: postgres:16
-    container_name: messaging-mvc-prisma-db
-    environment:
-      POSTGRES_USER: messaging_user
-      POSTGRES_PASSWORD: messaging_password
-      POSTGRES_DB: messaging_db
-    ports:
-      - "5437:5432"
-    volumes:
-      - ./sql/messaging_init.sql:/docker-entrypoint-initdb.d/init.sql
-  notification_db:
-    image: postgres:16
-    container_name: notification-mvc-prisma-db
-    environment:
-      POSTGRES_USER: notification_user
-      POSTGRES_PASSWORD: notification_password
-      POSTGRES_DB: notification_db
-    ports:
-      - "5436:5432"
-    volumes:
-      - ./sql/notification_init.sql:/docker-entrypoint-initdb.d/init.sql
-  auth_db:
-    image: postgres:16
-    container_name: auth-mvc-prisma-db
-    environment:
-      POSTGRES_USER: auth_user
-      POSTGRES_PASSWORD: auth_password
-      POSTGRES_DB: auth_db
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
-  resource_db:
-    image: postgres:16
-    container_name: resource-mvc-prisma-db
-    environment:
-      POSTGRES_USER: resource_user
-      POSTGRES_PASSWORD: resource_password
-      POSTGRES_DB: resource_db
-    ports:
-      - "5433:5432"
-    volumes:
-      - ./sql/resource_init.sql:/docker-entrypoint-initdb.d/init.sql
-  transaction_db:
-    image: postgres:16
-    container_name: transaction-mvc-prisma-db
-    environment:
-      POSTGRES_USER: transaction_user
-      POSTGRES_PASSWORD: transaction_password
-      POSTGRES_DB: transaction_db
-    ports:
-      - "5434:5432"
-    volumes:
-      - ./sql/transaction_init.sql:/docker-entrypoint-initdb.d/init.sql
-  review-reputation_db:
-    image: postgres:16
-    container_name: review-reputation-mvc-prisma-db
-    environment:
-      POSTGRES_USER: review_user
-      POSTGRES_PASSWORD: review_password
-      POSTGRES_DB: review_db
-    ports:
-      - "5435:5432"
-    volumes:
-      - ./sql/review_init.sql:/docker-entrypoint-initdb.d/init.sql
+      # This folder is scanned by Postgres only on the very first boot
+      - ./infrastructure/postgres:/docker-entrypoint-initdb.d/
+      # Persistence: your data stays even if you stop containers
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
@@ -87,3 +29,77 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
+
+  gateway:
+    image: ed18c/gateway-service:3ed7b56
+    container_name: gateway
+    ports:
+      - "3000:3000"
+    environment:
+      USER_SERVICE_URL: http://user-service:3001
+      RESOURCES_SERVICE_URL: http://resource-service:3002
+      OPERATION_SERVICE_URL: http://operation-service:3003
+      GATEWAY_PORT: 3000
+    depends_on:
+      user-service:
+        condition: service_started
+      resource-service:
+        condition: service_started
+      operation-service:
+        condition: service_started
+
+  user-service:
+    image: ed18c/user-service:c5de1cd
+    container_name: user-service
+    ports:
+      - "3001:3001"
+    environment:
+      JWT_SECRET: your_jwt_secret_key
+      REFRESH_JWT_SECRET: your_refresh_token_secret_key
+      AUTH_DATABASE_URL: postgres://postgres:postgres@postgres_cluster:5432/auth_db
+      AUTH_PORT: 3001
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+    depends_on:
+      postgres_cluster:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+  resource-service:
+    image: ed18c/resource-service:c5de1cd
+    container_name: resource-service
+    ports:
+      - "3002:3002"
+    environment:
+      JWT_SECRET: your_jwt_secret_key
+      REFRESH_JWT_SECRET: your_refresh_token_secret_key
+      RESOURCE_DATABASE_URL: postgres://postgres:postgres@postgres_cluster:5432/resource_db
+      RESOURCE_PORT: 3002
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+    depends_on:
+      postgres_cluster:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+  operation-service:
+    image: ed18c/operation-service:c5de1cd
+    container_name: operation-service
+    ports:
+      - "3003:3003"
+    environment:
+      JWT_SECRET: your_jwt_secret_key
+      REFRESH_JWT_SECRET: your_refresh_token_secret_key
+      OPERATION_DATABASE_URL: postgres://postgres:postgres@postgres_cluster:5432/operation_db
+      OPERATION_PORT: 3003
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+      RESOURCE_SERVICE_URL: http://resource-service:3002
+    depends_on:
+      postgres_cluster:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      resource-service:
+        condition: service_started
+
+
+volumes:
+  postgres_data:

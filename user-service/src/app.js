@@ -23,8 +23,12 @@ app.use('/apidoc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Connect to RabbitMQ
 (async () => {
-    const channel = await connectRabbitMQ();
-    await initUserPublisher(channel);
+  await connectRabbitMQ();  // Ensure channel is created
+
+  // Initialize publishers
+  await initUserPublisher();
+
+  console.log("✅ All RabbitMQ publishers initialized");
 })();
 
 app.use(authRoutes);

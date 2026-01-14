@@ -3,15 +3,12 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("../static/swagger/swagger.json");
-const { connectRabbitMQ, onChannelReady } = require("./utils/rabbitmq");
-const {
-  startUserEventsConsumer, 
-  startPurchaseRequestConsumer,
-  startPurchaseConfirmedConsumer
-} = require("./events/resourceConsumer");
+const { connectRabbitMQ } = require("./utils/rabbitmq");
+const { initOperationPublisher } = require("./events/operationPublisher");
 
 // App Routes
-const resourcesRoutes = require("./routes/resourcesRoutes");
+const purchasesRoutes = require("./routes/purchasesRoutes");
+const borrowingRoutes = require("./routes/borrowingRoutes");
 
 require("dotenv").config();
 
@@ -25,15 +22,21 @@ app.use("/", express.static(path.join(__dirname, "../static")));
 app.use("/doc", express.static(path.join(__dirname, "../static/doc")));
 app.use("/apidoc", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// 🔥 Register consumers SAFELY
-onChannelReady(startUserEventsConsumer);
-onChannelReady(startPurchaseRequestConsumer);
-onChannelReady(startPurchaseConfirmedConsumer);
+//Connect to RabbitMQ and start consumers
+(async () => {
+  await connectRabbitMQ();  // Ensure channel is created
 
-// Connect RabbitMQ (will trigger consumers)
-connectRabbitMQ();
+  // Initialize publishers
+  await initOperationPublisher();
+
+  console.log("✅ All RabbitMQ publishers initialized");
+})();
+
+//app.use(express.json());
 
 // app.use Routes
-app.use(resourcesRoutes);
+app.use(borrowingRoutes);
+app.use(purchasesRoutes);
+
 
 module.exports = app;

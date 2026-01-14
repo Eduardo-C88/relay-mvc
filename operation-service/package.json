@@ -1,5 +1,5 @@
 {
-  "name": "resource-service",
+  "name": "transaction-service",
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
@@ -14,6 +14,7 @@
   "dependencies": {
     "amqplib": "^0.10.9",
     "apidoc": "^1.2.0",
+    "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.1",
     "dotenv": "^17.2.3",

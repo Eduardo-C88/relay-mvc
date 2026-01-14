@@ -2,7 +2,7 @@ name: CD — Build & Push Docker Images
 
 on:
     push:
-        branches: [main, develop]
+        branches: [main, develop, feature/*]
 
 jobs:
     deploy:
@@ -39,23 +39,23 @@ jobs:
                   push: true
                   tags: ${{ steps.meta-res.outputs.tags }}
 
-            # transaction-service
-            - name: Meta - transaction-service
-              id: meta-trans
+            # operation-service
+            - name: Meta - operation-service
+              id: meta-op
               uses: docker/metadata-action@v5
               with:
-                  images: ${{ secrets.DOCKERHUB_USERNAME }}/transaction-service
+                  images: ${{ secrets.DOCKERHUB_USERNAME }}/operation-service
                   tags: |
                       type=sha,format=short,prefix=
                       type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-            - name: Build & Push transaction-service
+            - name: Build & Push operation-service
               uses: docker/build-push-action@v6
               with:
-                  context: ./transaction-service
-                  file: ./transaction-service/Dockerfile
+                  context: ./operation-service
+                  file: ./operation-service/Dockerfile
                   push: true
-                  tags: ${{ steps.meta-trans.outputs.tags }}
+                  tags: ${{ steps.meta-op.outputs.tags }}
 
             # user-service
             - name: Meta - user-service
