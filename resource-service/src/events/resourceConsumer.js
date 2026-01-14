@@ -1,10 +1,6 @@
 const { getChannel } = require("../utils/rabbitmq");
-const { prisma } = require("../models/prismaClient");
-const UserProfileService = require("../services/userProfileService");
+const { createOrUpdateUserProfile } = require('../services/userProfileService');
 const resourceService = require("../services/resourcesService");
-
-// Instantiate the Class-based service
-const userProfileService = new UserProfileService(prisma);
 
 /**
  * Consumes User Events (Created & Updated)
@@ -42,7 +38,7 @@ async function startUserEventsConsumer(channel) {
           console.log(`Processing user event for ID: ${user.userId || user.id}`);
 
           // Both Create and Update logic are handled by upsert in your service
-          await userProfileService.createOrUpdateUserProfile(user);
+          await createOrUpdateUserProfile(user);
 
           channel.ack(msg);
         } catch (error) {

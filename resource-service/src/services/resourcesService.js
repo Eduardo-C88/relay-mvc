@@ -1,198 +1,155 @@
-const { prisma } = require('../models/prismaClient');
+const { db } = require('../db/db');
 
-// Helper function needed by the Controller for the Authorization check
+// Helper: Get resource owner
 exports.getResourceOwner = async (resourceId) => {
-    try {
-        return await prisma.resource.findUnique({
-            where: { id: parseInt(resourceId) },
-            select: { ownerId: true }
-        });
-    } catch (error) {
-        // If resourceId is badly formatted and parseInt fails, Prisma might error.
-        console.error("Error fetching resource owner:", error);
-        return null; // Return null if fetching fails
-    }
+  const result = await db.selectFrom('resource')
+    .select('owner_id')
+    .where('id', '=', parseInt(resourceId))
+    .executeTakeFirst();
+  return result ? result.owner_id : null;
 };
 
+// Create Resource
 exports.createResource = async (data) => {
-    const newResource = await prisma.resource.create({
-        data: data,
-        include: {
-            category: true,
-            status: true
-        }
-    });
-    return newResource;
+    return await db.insertInto('resource')
+        .values(data)
+        .returningAll()
+        .executeTakeFirst();
 };
 
+// Edit Resource
 exports.editResource = async (resourceId, data) => {
-    try {
-        const updatedResource = await prisma.resource.update({
-            where: { id: parseInt(resourceId) },
-            data: data,
-            include: {
-                category: true,
-                status: true
-            }
-        });
-        return updatedResource;
-    } catch (error) {
-        // Prisma error code P2025 indicates "Record to update not found."
-        if (error.code === 'P2025') {
-            // Throw a specific error that the Controller can catch and translate to 404
-            const notFoundError = new Error('Resource not found');
-            notFoundError.statusCode = 404;
-            throw notFoundError;
-        }
-        // Re-throw any other unexpected error
+    const updated = await db.updateTable('resource')
+        .set(data)
+        .where('id', '=', parseInt(resourceId))
+        .returningAll()
+        .executeTakeFirst();
+
+    if (!updated) {
+        const error = new Error('Resource not found');
+        error.statusCode = 404;
+        throw error;
+    }
+    return updated;
+};
+
+// Delete Resource
+exports.deleteResource = async (resourceId) => {
+    const deleted = await db.deleteFrom('resource')
+        .where('id', '=', parseInt(resourceId))
+        .returningAll()
+        .executeTakeFirst();
+
+    if (!deleted) {
+        const error = new Error('Resource not found');
+        error.statusCode = 404;
         throw error;
     }
 };
 
-exports.deleteResource = async (resourceId) => {
-    try {
-        await prisma.resource.delete({
-            where: { id: parseInt(resourceId) }
-        });
-    } catch (error) {
-        // Prisma error code P2025 indicates "Record to delete not found."
-        if (error.code === 'P2025') {
-            const notFoundError = new Error('Resource not found');
-            notFoundError.statusCode = 404;
-            throw notFoundError;
-        }
-        // Re-throw any other unexpected error
-        throw error;
-    }  
-};
-
+// Get all available resources (with category & status names)
 exports.getAllResources = async () => {
-    return await prisma.resource.findMany({
-        where: {statusId: 1}, // Only return available resources
-        select: {
-            title: true,
-            price: true,
-            imageUrl: true,
-            owner: true
-        }
-    });
+    return await db.selectFrom('resource as r')
+        .leftJoin('category as c', 'r.category_id', 'c.id')
+        .leftJoin('status as s', 'r.status_id', 's.id')
+        .select([
+            'r.id',
+            'r.title',
+            'r.price',
+            'r.image_url',
+            'r.owner_id',
+            'c.name as category_name',
+            's.name as status_name'
+        ])
+        .where('r.status_id', '=', 1) // AVAILABLE
+        .execute();
 }
 
+// Get resource by ID (with category & status)
 exports.getResourceById = async (resourceId) => {
-    const resource = await prisma.resource.findUnique({
-        where: { id: parseInt(resourceId) },
-        select: {
-            title: true,
-            description: true,
-            price: true,
-            imageUrl: true,
-            category: true,
-            status: true,
-            ownerId: true
-        }
-    });
-    return resource;
+    return await db.selectFrom('resource as r')
+        .leftJoin('category as c', 'r.category_id', 'c.id')
+        .leftJoin('status as s', 'r.status_id', 's.id')
+        .select([
+            'r.id',
+            'r.title',
+            'r.description',
+            'r.price',
+            'r.image_url',
+            'r.owner_id',
+            'c.id as category_id',
+            'c.name as category_name',
+            's.id as status_id',
+            's.name as status_name'
+        ])
+        .where('r.id', '=', parseInt(resourceId))
+        .executeTakeFirst();
 };
 
-const parseFilterInt = (value) => {
-    if (value === undefined || value === null || value === '') {
-        return NaN;
-    }
-    return parseInt(value);
-};
-
+// Filter resources dynamically (with category & status)
 exports.filterResources = async (filters) => {
-    // Build dynamic where clause based on provided filters
-    const whereClause = {};
+    let query = db.selectFrom('resource as r')
+        .leftJoin('category as c', 'r.category_id', 'c.id')
+        .leftJoin('status as s', 'r.status_id', 's.id')
+        .select([
+            'r.id',
+            'r.title',
+            'r.price',
+            'r.image_url',
+            'r.owner_id',
+            'c.name as category_name',
+            's.name as status_name'
+        ]);
 
-    // Use explicit checks for existence and validity (e.g., ensure it's not an empty string)
-    const categoryId = parseFilterInt(filters.categoryId);
-    if (!isNaN(categoryId)) {
-        whereClause.categoryId = categoryId;
-    }
-    
-    const priceMax = parseFilterInt(filters.priceMax);
-    if (!isNaN(priceMax)) {
-        whereClause.price = { lte: priceMax };
-    }
+    if (filters.categoryId) query = query.where('r.category_id', '=', parseInt(filters.categoryId));
+    if (filters.ownerId) query = query.where('r.owner_id', '=', parseInt(filters.ownerId));
+    if (filters.priceMax) query = query.where('r.price', '<=', parseFloat(filters.priceMax));
 
-    const ownerId = parseFilterInt(filters.ownerId);
-    if (!isNaN(ownerId)) {
-        whereClause.ownerId = ownerId;
-    }
-
-    const filteredResources = await prisma.resource.findMany({
-        where: whereClause,
-        select: {
-            title: true,
-            price: true,
-            imageUrl: true,
-        }
-    });
-    return filteredResources;
+    return await query.execute();
 };
 
 // Higher-order functions
 exports.createCategory = async (data) => {
-    const newCategory = await prisma.category.create({
-        data: data
-    });
-    return newCategory;
+    return await db.insertInto('category')
+        .values(data)
+        .returningAll()
+        .executeTakeFirst();
 }
 
 exports.getResourceAvailability = async (resourceId, buyerId) => {
-    console.log(`Checking availability for resourceId: ${resourceId}, buyerId: ${buyerId}`);
-    const resource = await prisma.resource.findUnique({
-        where: { id: parseInt(resourceId) },
-        select: {
-            ownerId: true,
-            statusId: true
-        }
-    });
-    if (!resource) {
-        throw new Error('Resource not found');
-    }
-    // Check if the resource is available and not owned by the buyer
-    const isAvailable = resource.statusId === 1 && resource.ownerId !== parseInt(buyerId);
-    return { available: isAvailable, ownerId: resource.ownerId };
+    const resource = await db.selectFrom('resource')
+        .select(['owner_id', 'status_id'])
+        .where('id', '=', parseInt(resourceId))
+        .executeTakeFirst();
+
+    if (!resource) throw new Error('Resource not found');
+
+    const available = resource.status_id === 1 && resource.owner_id !== parseInt(buyerId);
+    return { available, ownerId: resource.owner_id };
 };
 
 exports.checkResourceConfirmable = async (resourceId, userId) => {
-    console.log(`Checking confirmable for resourceId: ${resourceId}, userId: ${userId}`);
-    const resource = await prisma.resource.findUnique({
-        where: { id: parseInt(resourceId) },
-        select: {
-            ownerId: true,
-            statusId: true
-        }
-    });
-    if (!resource) {
-        throw new Error('Resource not found');
-    }
-    // A purchase can be confirmed if the resource is sold and the user is the owner
-    const confirmable = resource.statusId === 4 && resource.ownerId === parseInt(userId);
-    return confirmable;
+    const resource = await db.selectFrom('resource')
+        .select(['owner_id', 'status_id'])
+        .where('id', '=', parseInt(resourceId))
+        .executeTakeFirst();
+
+    if (!resource) throw new Error('Resource not found');
+
+    return resource.status_id === 4 && resource.owner_id === parseInt(userId);
 };
 
 exports.changeResourceStatus = async (resourceId, statusId) => {
-    try {
-        const updatedResource = await prisma.resource.update({
-            where: { id: parseInt(resourceId) },
-            data: { statusId: statusId },
-            include: {
-                category: true,
-                status: true
-            }
-        });
-        return updatedResource;
-    } catch (error) {
-        // Prisma error code P2025 indicates "Record to update not found."
-        if (error.code === 'P2025') {
-            const notFoundError = new Error('Resource not found');
-            notFoundError.statusCode = 404;
-            throw notFoundError;
-        }
-        // Re-throw any other unexpected error
+    const updated = await db.updateTable('resource')
+        .set({ status_id: statusId })
+        .where('id', '=', parseInt(resourceId))
+        .returningAll()
+        .executeTakeFirst();
+
+    if (!updated) {
+        const error = new Error('Resource not found');
+        error.statusCode = 404;
         throw error;
     }
+    return updated;
 };
