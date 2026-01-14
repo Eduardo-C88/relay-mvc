@@ -1,6 +1,6 @@
 const { db } = require("../db/db");
-const { publishPurchaseCreated } = require("../events/transactionPublisher");
-const { publishPurchaseConfirmed } = require("../events/transactionPublisher");
+const { publishPurchaseCreated } = require("../events/operationPublisher");
+const { publishPurchaseConfirmed } = require("../events/operationPublisher");
 
 exports.createPurchaseReq = async (purchaseData) => {
     const newPurchase = await db

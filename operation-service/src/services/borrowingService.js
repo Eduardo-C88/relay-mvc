@@ -1,6 +1,6 @@
 const { db } = require("../db/db");
-const { publishBorrowCreated } = require("../events/transactionPublisher");
-const { publishBorrowConfirmed } = require("../events/transactionPublisher");
+const { publishBorrowCreated } = require("../events/operationPublisher");
+const { publishBorrowConfirmed } = require("../events/operationPublisher");
 
 exports.createBorrowReq = async (borrowData) => {
   const newBorrow = await db

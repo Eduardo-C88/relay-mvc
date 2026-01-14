@@ -30,7 +30,7 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
   user-service:
-    image: ed18c/user-service:bf98cfc
+    image: ed18c/user-service:54db2b3
     container_name: user-service
     ports:
       - "3001:3001"
@@ -46,7 +46,7 @@ services:
       rabbitmq:
         condition: service_started
   resource-service:
-    image: ed18c/resource-service:345c9ac
+    image: ed18c/resource-service:54db2b3
     container_name: resource-service
     ports:
       - "3002:3002"
@@ -61,6 +61,26 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_started
+  operation-service:
+    image: ed18c/operation-service:54db2b3
+    container_name: operation-service
+    ports:
+      - "3003:3003"
+    environment:
+      JWT_SECRET: your_jwt_secret_key
+      REFRESH_JWT_SECRET: your_refresh_token_secret_key
+      OPERATION_DATABASE_URL: postgres://postgres:postgres@postgres_cluster:5432/operation_db
+      OPERATION_PORT: 3003
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+      RESOURCE_SERVICE_URL: http://resource-service:3002
+    depends_on:
+      postgres_cluster:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      resource-service:
+        condition: service_started
+
 
 volumes:
   postgres_data:
