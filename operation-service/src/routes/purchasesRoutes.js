@@ -7,25 +7,25 @@ const router = express.Router();
 
 router.use(authMiddleware.authenticateToken);
 
-router.post("/:resourceId/purchase", purchasesController.createPurchase);
+router.post("/purchase/:resourceId", purchasesController.createPurchase);
 // // Seller appoves
-router.post("/:resourceId/approve", purchasesController.approvePurchase);
+router.post("/purchase/:resourceId/approve", purchasesController.approvePurchase);
 // // Seller rejects
-router.post("/:resourceId/reject", purchasesController.rejectPurchase);
+router.post("/purchase/:resourceId/reject", purchasesController.rejectPurchase);
 // // // Complete transaction (buyer confirms receipt)
 // router.post("/:resourceId/complete", purchasesController.completeTransaction);
 // // Get own purchases for a user
-router.get("/history", purchasesController.getPurchasesHistory);
+router.get("/purchase/history", purchasesController.getPurchasesHistory);
 
 // Get all purchases for a user as moderator/admin
 router.get(
-  "/:id/history",
+  "/purchase/:id/history",
   roleMiddleware.authorizeRole([2, 3]),
   purchasesController.getUserPurchases
 );
 // Get all purchases (admin/moderator)
 router.get(
-  "/all",
+  "/purchase/all",
   roleMiddleware.authorizeRole([2, 3]),
   purchasesController.getAllPurchases
 );

@@ -30,7 +30,7 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
   user-service:
-    image: ed18c/user-service:54db2b3
+    image: ed18c/user-service:33e7f30
     container_name: user-service
     ports:
       - "3001:3001"
@@ -46,7 +46,7 @@ services:
       rabbitmq:
         condition: service_started
   resource-service:
-    image: ed18c/resource-service:54db2b3
+    image: ed18c/resource-service:33e7f30
     container_name: resource-service
     ports:
       - "3002:3002"
@@ -62,7 +62,7 @@ services:
       rabbitmq:
         condition: service_started
   operation-service:
-    image: ed18c/operation-service:33eaa25
+    image: ed18c/operation-service:33e7f30
     container_name: operation-service
     ports:
       - "3003:3003"

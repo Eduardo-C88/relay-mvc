@@ -7,22 +7,22 @@ const router = express.Router();
 
 router.use(authMiddleware.authenticateToken);
 
-router.post("/:id", borrowingController.createBorrow);
+router.post("/borrow/:id", borrowingController.createBorrow);
 // Owner approves
-router.post("/:id/approve", borrowingController.approveBorrow);
+router.post("/borrow/:id/approve", borrowingController.approveBorrow);
 // Owner rejects
-router.post("/:id/reject", borrowingController.rejectBorrow);
+router.post("/borrow/:id/reject", borrowingController.rejectBorrow);
 // // User returns item
-// router.post("/:id/return", borrowingController.returnBorrowedItem);
+// router.post("/borrow/:id/return", borrowingController.returnBorrowedItem);
 // // Owner confirms return
-// router.post("/:id/confirmReturn", borrowingController.confirmReturnByOwner);
+// router.post("/borrow/:id/confirmReturn", borrowingController.confirmReturnByOwner);
 
 // Get own borrowings for a user
-router.get("/history", borrowingController.getBorrowingsHistory);
+router.get("/borrow/history", borrowingController.getBorrowingsHistory);
 
 // Get all borrowings for a user as moderator/admin
-router.get("/:id/history", roleMiddleware.authorizeRole([2, 3]), borrowingController.getUserBorrowings);
+router.get("/borrow/:id/history", roleMiddleware.authorizeRole([2, 3]), borrowingController.getUserBorrowings);
 // Get all borrowings (admin/moderator)
-router.get("/all",roleMiddleware.authorizeRole([2, 3]),borrowingController.getAllBorrowings);
+router.get("/borrow/all",roleMiddleware.authorizeRole([2, 3]),borrowingController.getAllBorrowings);
 
 module.exports = router;
