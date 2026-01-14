@@ -62,7 +62,7 @@ services:
       rabbitmq:
         condition: service_started
   operation-service:
-    image: ed18c/operation-service:2eea02e
+    image: ed18c/operation-service:33eaa25
     container_name: operation-service
     ports:
       - "3003:3003"
