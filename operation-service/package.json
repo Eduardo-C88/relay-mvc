@@ -12,8 +12,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/adapter-pg": "^7.0.1",
-    "@prisma/client": "^6.19.0",
     "amqplib": "^0.10.9",
     "apidoc": "^1.2.0",
     "axios": "^1.13.2",
@@ -22,11 +20,9 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
+    "kysely": "^0.28.9",
     "nodemon": "^3.1.11",
     "pg": "^8.16.3",
     "swagger-ui-express": "^5.0.1"
-  },
-  "devDependencies": {
-    "prisma": "^6.19.0"
   }
 }

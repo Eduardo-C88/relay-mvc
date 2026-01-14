@@ -96,14 +96,19 @@ exports.deleteResource = async (req, res) => {
   const currentUserRoleId = req.user.roleId; // <--- Assume this is passed by auth middleware
 
   try {
-      const existingResource = await resourceService.getResourceOwner(resourceId);
+      // --- AUTHORIZATION CHECK ---
+      const ownerId = await resourceService.getResourceOwner(resourceId);
 
-      if (!existingResource) {
-          return res.status(404).json({ error: "Resource not found" });
+      if (ownerId === null) {
+        return res.status(404).json({ error: 'Resource not found' });
+      }
+
+      if (ownerId !== currentUserId) {
+        return res.status(403).json({ error: 'Forbidden: You do not own this resource' });
       }
       
       // --- IMPROVED AUTHORIZATION CHECK ---
-      const isOwner = existingResource.ownerId === currentUserId;
+      const isOwner = ownerId === currentUserId;
       const isAdminOrModerator = 
           currentUserRoleId === 3 || 
           currentUserRoleId === 2;
