@@ -13,14 +13,13 @@ exports.createResource = async (req, res) => {
     }
 
     const resourceData = {};
-    resourceData.ownerId = ownerId;
+    resourceData.owner_id = ownerId;
     resourceData.title = title;
-    resourceData.categoryId = categoryId;
+    resourceData.category_id = categoryId;
 
     if (description !== undefined) resourceData.description = description;
     if (price !== undefined) resourceData.price = price;
-    if (imageUrl !== undefined) resourceData.imageUrl = imageUrl;
-
+    if (imageUrl !== undefined) resourceData.image_url = imageUrl;
     const newResource = await resourceService.createResource(resourceData);
     res.status(201).json(newResource);
   } catch (error) {
@@ -43,15 +42,14 @@ exports.editResource = async (req, res) => {
 
   try {
       // --- AUTHORIZATION CHECK ---
-      const existingResource = await resourceService.getResourceOwner(resourceId);
+      const ownerId = await resourceService.getResourceOwner(resourceId);
 
-      if (!existingResource) {
-          return res.status(404).json({ error: 'Resource not found' });
+      if (ownerId === null) {
+        return res.status(404).json({ error: 'Resource not found' });
       }
 
-      if (existingResource.ownerId !== currentUserId) {
-          // 403 Forbidden: User is authenticated but not allowed to access this resource
-          return res.status(403).json({ error: 'Forbidden: You do not own this resource' });
+      if (ownerId !== currentUserId) {
+        return res.status(403).json({ error: 'Forbidden: You do not own this resource' });
       }
 
       // --- PREPARE DATA ---
@@ -60,10 +58,10 @@ exports.editResource = async (req, res) => {
       
       // This relies on validationMiddleware ensuring required fields (like title/categoryId) are present.
       if (title !== undefined) updateData.title = title;
-      if (categoryId !== undefined) updateData.categoryId = categoryId;
+      if (categoryId !== undefined) updateData.category_id = categoryId;
       if (description !== undefined) updateData.description = description;
       if (price !== undefined) updateData.price = price;
-      if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+      if (imageUrl !== undefined) updateData.image_url = imageUrl;
 
       // If no fields are provided for update (after validation check), return 400
       if (Object.keys(updateData).length === 0) {

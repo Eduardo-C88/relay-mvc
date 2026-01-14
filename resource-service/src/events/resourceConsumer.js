@@ -39,6 +39,7 @@ async function startUserEventsConsumer(channel) {
 
           // Both Create and Update logic are handled by upsert in your service
           await createOrUpdateUserProfile(user);
+          console.log(`User profile synced for ID: ${user.userId || user.id}`);
 
           channel.ack(msg);
         } catch (error) {
