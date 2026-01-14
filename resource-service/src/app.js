@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("../static/swagger/swagger.json");
-const { connectRabbitMQ } = require("./utils/rabbitmq");
+const { connectRabbitMQ, onChannelReady } = require("./utils/rabbitmq");
 const {
   startUserEventsConsumer, 
   startPurchaseRequestConsumer,
@@ -25,13 +25,13 @@ app.use("/", express.static(path.join(__dirname, "../static")));
 app.use("/doc", express.static(path.join(__dirname, "../static/doc")));
 app.use("/apidoc", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Connect to RabbitMQ and start consumers
-(async () => {
-  const channel = await connectRabbitMQ();
-  await startUserEventsConsumer(channel);
-  await startPurchaseRequestConsumer(channel);
-  await startPurchaseConfirmedConsumer(channel);
-})();
+// 🔥 Register consumers SAFELY
+onChannelReady(startUserEventsConsumer);
+onChannelReady(startPurchaseRequestConsumer);
+onChannelReady(startPurchaseConfirmedConsumer);
+
+// Connect RabbitMQ (will trigger consumers)
+connectRabbitMQ();
 
 // app.use Routes
 app.use(resourcesRoutes);
