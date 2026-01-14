@@ -1,73 +1,62 @@
 const { getChannel } = require("../utils/rabbitmq");
 
-async function initOperationPublisher(ch) {
-  purchasesChannel = getChannel();
-  if (!purchasesChannel) return;
+const QUEUES = [
+  "PurchaseRequestCreated",
+  "PurchaseRequestConfirmed",
+  "BorrowRequestCreated",
+  "BorrowRequestConfirmed",
+];
 
-  await purchasesChannel.assertQueue("PurchaseRequestCreated", { durable: true });
-  await purchasesChannel.assertQueue("PurchaseRequestConfirmed", { durable: true });
-  await purchasesChannel.assertQueue("BorrowRequestCreated", { durable: true });
-  await purchasesChannel.assertQueue("BorrowRequestConfirmed", { durable: true });
-}
-
-function publishPurchaseCreated(purchase) {
-  const purchasesChannel = getChannel();
-  if (!purchasesChannel) {
-    console.error("RabbitMQ channel not initialized");
+/**
+ * Initialize all queues at startup
+ */
+async function initOperationPublisher() {
+  const channel = getChannel();
+  if (!channel) {
+    console.error("Cannot init OperationPublisher, channel not ready");
     return;
   }
 
-  channel.sendToQueue(
-    "PurchaseRequestCreated",
-    Buffer.from(JSON.stringify(purchase)),
-    { persistent: true }
-  );
-  console.log("Published PurchaseRequestCreated event");
+  for (const queue of QUEUES) {
+    await channel.assertQueue(queue, { durable: true });
+  }
+
+  console.log("✅ Operation queues initialized:", QUEUES.join(", "));
+}
+
+/**
+ * Generic publish helper
+ */
+function publishToQueue(queue, payload) {
+  const channel = getChannel();
+  if (!channel) {
+    console.error(`RabbitMQ channel not initialized. Failed to send to ${queue}`);
+    return;
+  }
+
+  try {
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(payload)), { persistent: true });
+    console.log(`📤 Published event to ${queue}`);
+  } catch (err) {
+    console.error(`Failed to publish to ${queue}:`, err);
+  }
+}
+
+// Specific publishers
+function publishPurchaseCreated(purchase) {
+  publishToQueue("PurchaseRequestCreated", purchase);
 }
 
 function publishPurchaseConfirmed(purchase) {
-  const purchasesChannel = getChannel();
-  if (!purchasesChannel) {
-    console.error("RabbitMQ channel not initialized");
-    return;
-  }
-
-  channel.sendToQueue(
-    "PurchaseRequestConfirmed",
-    Buffer.from(JSON.stringify(purchase)),
-    { persistent: true }
-  );
-  console.log("Published PurchaseRequestConfirmed event");
+  publishToQueue("PurchaseRequestConfirmed", purchase);
 }
 
 function publishBorrowCreated(borrow) {
-  const purchasesChannel = getChannel();
-  if (!purchasesChannel) {
-    console.error("RabbitMQ channel not initialized");
-    return;
-  }
-
-  channel.sendToQueue(
-    "BorrowRequestCreated",
-    Buffer.from(JSON.stringify(borrow)),
-    { persistent: true }
-  );
-  console.log("Published BorrowRequestCreated event");
+  publishToQueue("BorrowRequestCreated", borrow);
 }
 
 function publishBorrowConfirmed(borrow) {
-  const purchasesChannel = getChannel();
-  if (!purchasesChannel) {
-    console.error("RabbitMQ channel not initialized");
-    return;
-  }
-
-  channel.sendToQueue(
-    "BorrowRequestConfirmed",
-    Buffer.from(JSON.stringify(borrow)),
-    { persistent: true }
-  );
-  console.log("Published BorrowRequestConfirmed event");
+  publishToQueue("BorrowRequestConfirmed", borrow);
 }
 
 module.exports = {

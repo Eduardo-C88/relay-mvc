@@ -3,135 +3,92 @@ const { createOrUpdateUserProfile } = require('../services/userProfileService');
 const resourceService = require("../services/resourcesService");
 
 /**
- * Consumes User Events (Created & Updated)
- * Listens to the 'user_events' Fanout Exchange.
+ * Generic helper to consume messages from a queue
  */
-async function startUserEventsConsumer(channel) {
-  if (!channel) channel = getChannel();
+async function consumeQueue(queueName, handler, { prefetch = 1 } = {}) {
+  let channel = getChannel();
   if (!channel) {
-    console.error("RabbitMQ channel not initialized for User Events");
+    console.error(`RabbitMQ channel not ready for ${queueName}`);
     return;
   }
 
-  const USER_EXCHANGE = "user_events";
-  const QUEUE_NAME = "resource_service_user_sync"; // Single queue for this service's user sync
+  await channel.assertQueue(queueName, { durable: true });
+  channel.prefetch(prefetch);
 
-  try {
-    // 1. Assert Exchange (Matches Publisher)
-    await channel.assertExchange(USER_EXCHANGE, 'fanout', { durable: true });
+  console.log(`✅ Waiting for messages on queue: ${queueName}`);
 
-    // 2. Assert Queue
-    const q = await channel.assertQueue(QUEUE_NAME, { durable: true });
+  channel.consume(queueName, async (msg) => {
+    if (!msg || !msg.content) return;
 
-    // 3. Bind Queue to Exchange
-    await channel.bindQueue(q.queue, USER_EXCHANGE, '');
-
-    // 4. Prefetch (Process 1 message at a time)
-    channel.prefetch(1);
-
-    console.log(`Resource Service: Waiting for user events in ${q.queue}`);
-
-    channel.consume(q.queue, async (msg) => {
-      if (msg.content) {
-        try {
-          const user = JSON.parse(msg.content.toString());
-          console.log(`Processing user event for ID: ${user.userId || user.id}`);
-
-          // Both Create and Update logic are handled by upsert in your service
-          await createOrUpdateUserProfile(user);
-          console.log(`User profile synced for ID: ${user.userId || user.id}`);
-
-          channel.ack(msg);
-        } catch (error) {
-          console.error("Error processing User Event:", error);
-          // Requeue = false (Discard or DLQ to prevent infinite loops on bad JSON)
-          channel.nack(msg, false, false);
-        }
-      }
-    });
-  } catch (err) {
-    console.error("Error setting up User Consumer:", err);
-  }
+    try {
+      const payload = JSON.parse(msg.content.toString());
+      await handler(payload);
+      channel.ack(msg);
+    } catch (err) {
+      console.error(`❌ Error processing message from ${queueName}:`, err);
+      channel.nack(msg, false, false); // discard bad message
+    }
+  });
 }
 
 /**
- * Consumes Purchase Request Created
- * Direct Queue (Point-to-Point)
+ * Generic helper to consume fanout exchange
  */
-async function startPurchaseRequestConsumer(channel) {
-  if (!channel) channel = getChannel();
-  if (!channel) return;
-
-  const QUEUE_NAME = "PurchaseRequestCreated";
-
-  try {
-    await channel.assertQueue(QUEUE_NAME, { durable: true }); // Ensure queue exists
-    channel.prefetch(1);
-
-    console.log(`Resource Service: Waiting for ${QUEUE_NAME}`);
-
-    channel.consume(QUEUE_NAME, async (msg) => {
-      if (msg.content) {
-        try {
-          const purchaseRequest = JSON.parse(msg.content.toString());
-          
-          await resourceService.changeResourceStatus(
-            purchaseRequest.resourceId,
-            purchaseRequest.statusId
-          );
-
-          channel.ack(msg);
-        } catch (error) {
-          console.error(`Error processing ${QUEUE_NAME}:`, error);
-          channel.nack(msg, false, false);
-        }
-      }
-    });
-  } catch (err) {
-    console.error(`Error setting up ${QUEUE_NAME} consumer:`, err);
+async function consumeFanout(exchangeName, queueName, handler) {
+  let channel = getChannel();
+  if (!channel) {
+    console.error(`RabbitMQ channel not ready for exchange ${exchangeName}`);
+    return;
   }
+
+  await channel.assertExchange(exchangeName, 'fanout', { durable: true });
+  const q = await channel.assertQueue(queueName, { durable: true });
+  await channel.bindQueue(q.queue, exchangeName, '');
+  channel.prefetch(1);
+
+  console.log(`✅ Waiting for messages on fanout exchange ${exchangeName} -> queue ${queueName}`);
+
+  channel.consume(q.queue, async (msg) => {
+    if (!msg || !msg.content) return;
+
+    try {
+      const payload = JSON.parse(msg.content.toString());
+      await handler(payload);
+      channel.ack(msg);
+    } catch (err) {
+      console.error(`❌ Error processing fanout message from ${exchangeName}:`, err);
+      channel.nack(msg, false, false);
+    }
+  });
 }
 
 /**
- * Consumes Purchase Request Confirmed
- * Direct Queue (Point-to-Point)
+ * Specific consumers
  */
-async function startPurchaseConfirmedConsumer(channel) {
-  if (!channel) channel = getChannel();
-  if (!channel) return;
-
-  const QUEUE_NAME = "PurchaseRequestConfirmed";
-
-  try {
-    await channel.assertQueue(QUEUE_NAME, { durable: true });
-    channel.prefetch(1);
-
-    console.log(`Resource Service: Waiting for ${QUEUE_NAME}`);
-
-    channel.consume(QUEUE_NAME, async (msg) => {
-      if (msg.content) {
-        try {
-          const purchaseConfirmed = JSON.parse(msg.content.toString());
-
-          await resourceService.changeResourceStatus(
-            purchaseConfirmed.resourceId,
-            purchaseConfirmed.statusId
-          );
-
-          channel.ack(msg);
-        } catch (error) {
-          console.error(`Error processing ${QUEUE_NAME}:`, error);
-          channel.nack(msg, false, false);
-        }
-      }
-    });
-  } catch (err) {
-    console.error(`Error setting up ${QUEUE_NAME} consumer:`, err);
-  }
+async function startUserEventsConsumer() {
+  await consumeFanout('user_events', 'resource_service_user_sync', async (user) => {
+    console.log(`Processing User Event: ${user.id || user.userId}`);
+    await createOrUpdateUserProfile(user);
+    console.log(`User profile synced for ID: ${user.id || user.userId}`);
+  });
 }
 
-module.exports = { 
-  startUserEventsConsumer, 
-  startPurchaseRequestConsumer, 
-  startPurchaseConfirmedConsumer 
+async function startPurchaseRequestConsumer() {
+  await consumeQueue('PurchaseRequestCreated', async (purchase) => {
+    console.log(`Processing PurchaseRequestCreated for resource ${purchase.resourceId}`);
+    await resourceService.changeResourceStatus(purchase.resourceId, purchase.statusId);
+  });
+}
+
+async function startPurchaseConfirmedConsumer() {
+  await consumeQueue('PurchaseRequestConfirmed', async (purchase) => {
+    console.log(`Processing PurchaseRequestConfirmed for resource ${purchase.resourceId}`);
+    await resourceService.changeResourceStatus(purchase.resourceId, purchase.statusId);
+  });
+}
+
+module.exports = {
+  startUserEventsConsumer,
+  startPurchaseRequestConsumer,
+  startPurchaseConfirmedConsumer,
 };
