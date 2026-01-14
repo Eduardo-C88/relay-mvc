@@ -4,7 +4,7 @@ const path = require("path");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("../static/swagger/swagger.json");
 const { connectRabbitMQ } = require("./utils/rabbitmq");
-const { initTransactionPublisher } = require("./events/transactionPublisher");
+const { initOperationPublisher } = require("./events/operationPublisher");
 
 // App Routes
 const purchasesRoutes = require("./routes/purchasesRoutes");
@@ -25,7 +25,7 @@ app.use("/apidoc", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 //Connect to RabbitMQ and start consumers
 (async () => {
   const channel = await connectRabbitMQ();
-  await initTransactionPublisher(channel);
+  await initOperationPublisher(channel);
 })();
 
 //app.use(express.json());

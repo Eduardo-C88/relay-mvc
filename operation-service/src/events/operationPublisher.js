@@ -1,6 +1,6 @@
 let purchasesChannel;
 
-async function initTransactionPublisher(ch) {
+async function initOperationPublisher(ch) {
   purchasesChannel = ch;
 
   // Purchases queues
@@ -53,7 +53,7 @@ function publishBorrowConfirmed(borrow) {
 }
 
 module.exports = {
-  initTransactionPublisher,
+  initOperationPublisher,
   publishPurchaseCreated,
   publishPurchaseConfirmed,
   publishBorrowCreated,
