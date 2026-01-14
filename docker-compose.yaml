@@ -29,8 +29,27 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
+
+  gateway:
+    image: ed18c/gateway-service:c5de1cd
+    container_name: gateway
+    ports:
+      - "3000:3000"
+    environment:
+      USER_SERVICE_URL: http://user-service:3001
+      RESOURCES_SERVICE_URL: http://resource-service:3002
+      OPERATION_SERVICE_URL: http://operation-service:3003
+      GATEWAY_PORT: 3000
+    depends_on:
+      user-service:
+        condition: service_started
+      resource-service:
+        condition: service_started
+      operation-service:
+        condition: service_started
+        
   user-service:
-    image: ed18c/user-service:33e7f30
+    image: ed18c/user-service:c5de1cd
     container_name: user-service
     ports:
       - "3001:3001"
@@ -46,7 +65,7 @@ services:
       rabbitmq:
         condition: service_started
   resource-service:
-    image: ed18c/resource-service:33e7f30
+    image: ed18c/resource-service:c5de1cd
     container_name: resource-service
     ports:
       - "3002:3002"
@@ -62,7 +81,7 @@ services:
       rabbitmq:
         condition: service_started
   operation-service:
-    image: ed18c/operation-service:33e7f30
+    image: ed18c/operation-service:c5de1cd
     container_name: operation-service
     ports:
       - "3003:3003"
