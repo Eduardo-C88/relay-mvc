@@ -46,7 +46,7 @@ services:
       rabbitmq:
         condition: service_started
   resource-service:
-    image: ed18c/resource-service:9a261a4
+    image: ed18c/resource-service:345c9ac
     container_name: resource-service
     ports:
       - "3002:3002"
