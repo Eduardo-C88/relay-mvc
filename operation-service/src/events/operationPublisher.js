@@ -1,55 +1,73 @@
-let purchasesChannel;
+const { getChannel } = require("../utils/rabbitmq");
 
 async function initOperationPublisher(ch) {
-  purchasesChannel = ch;
+  purchasesChannel = getChannel();
+  if (!purchasesChannel) return;
 
-  // Purchases queues
-  await purchasesChannel.assertQueue("PurchaseRequestCreated");
-  await purchasesChannel.assertQueue("PurchaseRequestConfirmed");
-
-  // Borrowings queues
-  await purchasesChannel.assertQueue("BorrowRequestCreated");
-  await purchasesChannel.assertQueue("BorrowRequestConfirmed");
+  await purchasesChannel.assertQueue("PurchaseRequestCreated", { durable: true });
+  await purchasesChannel.assertQueue("PurchaseRequestConfirmed", { durable: true });
+  await purchasesChannel.assertQueue("BorrowRequestCreated", { durable: true });
+  await purchasesChannel.assertQueue("BorrowRequestConfirmed", { durable: true });
 }
 
 function publishPurchaseCreated(purchase) {
-  if (!purchasesChannel) throw new Error("RabbitMQ channel not initialized");
+  const purchasesChannel = getChannel();
+  if (!purchasesChannel) {
+    console.error("RabbitMQ channel not initialized");
+    return;
+  }
 
-  purchasesChannel.sendToQueue(
+  channel.sendToQueue(
     "PurchaseRequestCreated",
     Buffer.from(JSON.stringify(purchase)),
     { persistent: true }
   );
+  console.log("Published PurchaseRequestCreated event");
 }
 
 function publishPurchaseConfirmed(purchase) {
-  if (!purchasesChannel) throw new Error("RabbitMQ channel not initialized");
+  const purchasesChannel = getChannel();
+  if (!purchasesChannel) {
+    console.error("RabbitMQ channel not initialized");
+    return;
+  }
 
-  purchasesChannel.sendToQueue(
+  channel.sendToQueue(
     "PurchaseRequestConfirmed",
     Buffer.from(JSON.stringify(purchase)),
     { persistent: true }
   );
+  console.log("Published PurchaseRequestConfirmed event");
 }
 
 function publishBorrowCreated(borrow) {
-  if (!purchasesChannel) throw new Error("RabbitMQ channel not initialized");
+  const purchasesChannel = getChannel();
+  if (!purchasesChannel) {
+    console.error("RabbitMQ channel not initialized");
+    return;
+  }
 
-  purchasesChannel.sendToQueue(
+  channel.sendToQueue(
     "BorrowRequestCreated",
     Buffer.from(JSON.stringify(borrow)),
     { persistent: true }
   );
+  console.log("Published BorrowRequestCreated event");
 }
 
 function publishBorrowConfirmed(borrow) {
-  if (!purchasesChannel) throw new Error("RabbitMQ channel not initialized");
+  const purchasesChannel = getChannel();
+  if (!purchasesChannel) {
+    console.error("RabbitMQ channel not initialized");
+    return;
+  }
 
-  purchasesChannel.sendToQueue(
+  channel.sendToQueue(
     "BorrowRequestConfirmed",
     Buffer.from(JSON.stringify(borrow)),
     { persistent: true }
   );
+  console.log("Published BorrowRequestConfirmed event");
 }
 
 module.exports = {
