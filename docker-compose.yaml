@@ -31,7 +31,7 @@ services:
       RABBITMQ_DEFAULT_PASS: admin
 
   gateway:
-    image: ed18c/gateway-service:c5de1cd
+    image: ed18c/gateway-service:3ed7b56
     container_name: gateway
     ports:
       - "3000:3000"
@@ -47,7 +47,7 @@ services:
         condition: service_started
       operation-service:
         condition: service_started
-        
+
   user-service:
     image: ed18c/user-service:c5de1cd
     container_name: user-service
