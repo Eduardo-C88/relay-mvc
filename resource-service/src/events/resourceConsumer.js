@@ -142,14 +142,14 @@ async function startResourceConsumers() {
 
   // Consume purchase approved events
   await consume(EVENTS.PURCHASE_APPROVED, async (purchase) => {
-    console.log(`Processing PurchaseApproved for resource ${purchase.resourceId}`);
-    await resourceService.resourceApproved(purchase.resourceId);
+    console.log(`Processing PurchaseApproved for resource ${purchase.payload.resourceId}`);
+    await resourceService.resourceApproved(purchase.payload.resourceId);
   });
 
   // Consume purchase rejected events
   await consume(EVENTS.PURCHASE_REJECTED, async (purchase) => {
-    console.log(`Processing PurchaseRejected for resource ${purchase.resourceId}`);
-    await resourceService.resourceRejected(purchase.resourceId);
+    console.log(`Processing PurchaseRejected for resource ${purchase.payload.resourceId}`);
+    await resourceService.resourceRejected(purchase.payload.resourceId);
   });
 }
 
