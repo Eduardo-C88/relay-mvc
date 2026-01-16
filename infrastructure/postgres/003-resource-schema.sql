@@ -37,7 +37,7 @@ CREATE TABLE resource (
     title TEXT NOT NULL,
     category_id INT REFERENCES category(id) ON DELETE SET NULL,
     description TEXT,
-    status_id INT NOT NULL REFERENCES resource_status(id),
+    status_id INT NOT NULL REFERENCES resource_status(id) DEFAULT 1,
     price FLOAT,
     image_url TEXT,
     created_at TIMESTAMP DEFAULT now()
