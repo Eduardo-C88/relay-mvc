@@ -31,7 +31,7 @@ services:
       RABBITMQ_DEFAULT_PASS: admin
 
   gateway:
-    image: ed18c/gateway-service:22fb720
+    image: ed18c/gateway-service:08388ef
     container_name: gateway
     ports:
       - "3000:3000"
@@ -49,7 +49,7 @@ services:
         condition: service_started
 
   user-service:
-    image: ed18c/user-service:22fb720
+    image: ed18c/user-service:08388ef
     container_name: user-service
     ports:
       - "3001:3001"
@@ -65,7 +65,7 @@ services:
       rabbitmq:
         condition: service_started
   resource-service:
-    image: ed18c/resource-service:22fb720
+    image: ed18c/resource-service:08388ef
     container_name: resource-service
     ports:
       - "3002:3002"
@@ -81,7 +81,7 @@ services:
       rabbitmq:
         condition: service_started
   operation-service:
-    image: ed18c/operation-service:22fb720
+    image: ed18c/operation-service:08388ef
     container_name: operation-service
     ports:
       - "3003:3003"
