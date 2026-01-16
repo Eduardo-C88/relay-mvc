@@ -1,33 +1,8 @@
-# 1. Change directory to the micro service
+# 1. Run Docker Compose
 ```
-cd ./auth-service
+docker-compose up --build
 ```
-
-# 2. Install dependecies
+#1.2 Full clear Docker Compose
 ```
-npm install
-```
-
-# 3. Set up environment variables  
-Copy .env.example to .env and update the values:
-
-# 4. Run PostgreSQL on Docker
-Docker-compose already on the project
-```
-docker-compose up
-```
-
-# 5. Generate Prisma client
-```
-npx prisma generate
-```
-
-# 6. Apply database migrations
-```
-npx prisma migrate dev
-```
-
-# 7. Run the development server
-```
-npm run dev
+docker-compose down -v
 ```
