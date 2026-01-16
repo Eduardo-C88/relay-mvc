@@ -95,23 +95,24 @@
 
 const { consume } = require("../messaging/consumer");
 const EVENTS = require("../messaging/events");
-const { createOrUpdateUserProfile } = require('../services/userProfileService');
+const { createUserProfile, updateUserProfile } = require('../services/userProfileService');
 const resourceService = require("../services/resourcesService");
 const { publishResourceReserved, publishResourceReservationFailed } = require("./resourcePublisher");
 
 async function startResourceConsumers() {
   // Consume user created/updated events
-  await consume(EVENTS.USER_CREATED, async (message) => {
-    console.log("RAW EVENT:", JSON.stringify(message, null, 2));
-    // console.log(`Processing UserCreated event for ID: ${user.userId}`);
-    // await createOrUpdateUserProfile(user);
-    // console.log(`User profile synced for ID: ${user.userId}`);
+  await consume(EVENTS.USER_CREATED, async (user) => {
+    console.log("RAW EVENT:", JSON.stringify(user, null, 2));
+    console.log(`Processing UserCreated event for ID: ${user.payload.userId}`);
+    await createUserProfile(user.payload);
+    console.log(`User profile synced for ID: ${user.payload.userId}`);
   });
 
   await consume(EVENTS.USER_UPDATED, async (user) => {
-    console.log(`Processing UserUpdated event for ID: ${user.userId}`);
-    await createOrUpdateUserProfile(user);
-    console.log(`User profile synced for ID: ${user.userId}`);
+    console.log("RAW EVENT:", JSON.stringify(user, null, 2));
+    console.log(`Processing UserUpdated event for ID: ${user.payload.userId}`);
+    await updateUserProfile(user.payload);
+    console.log(`User profile synced for ID: ${user.payload.userId}`);
   });
 
   // Consume purchase request created events
