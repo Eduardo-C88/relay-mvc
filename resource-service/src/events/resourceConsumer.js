@@ -102,9 +102,10 @@ const { publishResourceReserved, publishResourceReservationFailed } = require(".
 async function startResourceConsumers() {
   // Consume user created/updated events
   await consume(EVENTS.USER_CREATED, async (user) => {
-    console.log(`Processing UserCreated event for ID: ${user.userId}`);
-    await createOrUpdateUserProfile(user);
-    console.log(`User profile synced for ID: ${user.userId}`);
+    console.log("RAW EVENT:", JSON.stringify(message, null, 2));
+    // console.log(`Processing UserCreated event for ID: ${user.userId}`);
+    // await createOrUpdateUserProfile(user);
+    // console.log(`User profile synced for ID: ${user.userId}`);
   });
 
   await consume(EVENTS.USER_UPDATED, async (user) => {
