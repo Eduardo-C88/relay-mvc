@@ -52,7 +52,7 @@ exports.deleteResource = async (resourceId) => {
 exports.getAllResources = async () => {
     return await db.selectFrom('resource as r')
         .leftJoin('category as c', 'r.category_id', 'c.id')
-        .leftJoin('status as s', 'r.status_id', 's.id')
+        .leftJoin('resource_status as s', 'r.status_id', 's.id')
         .select([
             'r.id',
             'r.title',
@@ -70,7 +70,7 @@ exports.getAllResources = async () => {
 exports.getResourceById = async (resourceId) => {
     return await db.selectFrom('resource as r')
         .leftJoin('category as c', 'r.category_id', 'c.id')
-        .leftJoin('status as s', 'r.status_id', 's.id')
+        .leftJoin('resource_status as s', 'r.status_id', 's.id')
         .select([
             'r.id',
             'r.title',
@@ -91,7 +91,7 @@ exports.getResourceById = async (resourceId) => {
 exports.filterResources = async (filters) => {
     let query = db.selectFrom('resource as r')
         .leftJoin('category as c', 'r.category_id', 'c.id')
-        .leftJoin('status as s', 'r.status_id', 's.id')
+        .leftJoin('resource_status as s', 'r.status_id', 's.id')
         .select([
             'r.id',
             'r.title',
