@@ -118,22 +118,23 @@ async function startResourceConsumers() {
   // Consume purchase request created events
   await consume(EVENTS.PURCHASE_REQUESTED, async (purchase) => {
     try {
-      console.log(`Processing PurchaseRequestRequested for resource ${purchase.resourceId}`);
-      const ownerId = await resourceService.validatePurchaseRequest(purchase.resourceId, purchase.buyerId);
+      console.log("RAW EVENT:", JSON.stringify(purchase, null, 2))
+      console.log(`Processing PurchaseRequested for resource ${purchase.payload.resourceId}`);
+      const ownerId = await resourceService.validatePurchaseRequest(purchase.payload.resourceId, purchase.payload.buyerId);
 
-      await resourceService.reserveResource(purchase.resourceId);
+      await resourceService.reserveResource(purchase.payload.resourceId);
 
       publishResourceReserved({
-        purchaseId: purchase.purchaseId,
-        resourceId: purchase.resourceId,
+        purchaseId: purchase.payload.purchaseId,
+        resourceId: purchase.payload.resourceId,
         ownerId: ownerId,
       });
     } catch (error) {
-      console.error(`Resource reservation failed for resource ${purchase.resourceId}:`, error);
+      console.error(`Resource reservation failed for resource ${purchase.payload.resourceId}:`, error);
       // Here you would publish a reservation failed event
       publishResourceReservationFailed({
-        purchaseId: purchase.purchaseId,
-        resourceId: purchase.resourceId,
+        purchaseId: purchase.payload.purchaseId,
+        resourceId: purchase.payload.resourceId,
         reason: error.message,  
       });
     }
