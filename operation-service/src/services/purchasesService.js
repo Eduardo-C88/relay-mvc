@@ -123,32 +123,33 @@ exports.rejectPurchaseReq = async (purchaseId, userId) => {
 
 exports.getPurchasesByUser = async (userId) => {
   return await db
-      .selectFrom('purchases')
-      .innerJoin('status', 'status.id', 'purchases.status_id')
-      .select([
-        'purchases.id',
-        'purchases.resource_id',
-        'purchases.seller_id',
-        'purchases.status_id',
-        'purchases.created_at',
-        'status.name as status_name',
-      ])
-      .where('purchases.buyer_id', '=', userId)
-      .execute();
+    .selectFrom('purchases as p')
+    .innerJoin('purchase_status as s', 's.id', 'p.status_id')
+    .select([
+      'p.id',
+      'p.resource_id',
+      'p.seller_id',
+      'p.status_id',
+      'p.created_at',
+      's.name as status_name',
+    ])
+    .where('p.buyer_id', '=', userId)
+    .execute();
 };
 
+
 exports.getAllPurchases = async () => {
-    return await db
-      .selectFrom('purchases')
-      .innerJoin('status', 'status.id', 'purchases.status_id')
-      .select([
-        'purchases.id',
-        'purchases.buyer_id',
-        'purchases.resource_id',
-        'purchases.seller_id',
-        'purchases.status_id',
-        'purchases.created_at',
-        'status.name as status_name',
-      ])
-      .execute();
+  return await db
+    .selectFrom('purchases as p')
+    .innerJoin('purchase_status as s', 's.id', 'p.status_id')
+    .select([
+      'p.id',
+      'p.buyer_id',
+      'p.resource_id',
+      'p.seller_id',
+      'p.status_id',
+      'p.created_at',
+      's.name as status_name',
+    ])
+    .execute();
 };
