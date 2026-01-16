@@ -4,24 +4,33 @@ const { db } = require('../db/db');
  * Upsert user profile for created or updated users
  * @param {Object} user - User object from user-service
  */
-async function createOrUpdateUserProfile(user) {
+async function createUserProfile(user) {
   await db
     .insertInto('user_profile')
     .values({
       id: user.userId,
       name: user.name,
       reputation: user.reputation,
-      university: user.university,
-      course: user.course
     })
     .onConflict((oc) =>
       oc.column('id').doUpdateSet({
         name: user.name,
         reputation: user.reputation,
-        university: user.university,
-        course: user.course
       })
     )
+    .execute();
+}
+
+async function updateUserProfile(user) {
+  await db
+    .updateTable('user_profile')
+    .set({
+      name: user.name,
+      reputation: user.reputation,
+      university: user.university,
+      course: user.course,
+    })
+    .where('id', '=', user.userId)
     .execute();
 }
 
@@ -39,6 +48,7 @@ async function getUserProfileById(userId) {
 }
 
 module.exports = {
-  createOrUpdateUserProfile,
+  createUserProfile,
+  updateUserProfile,
   getUserProfileById
 };

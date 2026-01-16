@@ -1,4 +1,5 @@
 const { db } = require('../db/db');
+const { publishResourceRequested, publishResourceReservationFailed } = require('../events/resourcePublisher');
 
 // Helper: Get resource owner
 exports.getResourceOwner = async (resourceId) => {
@@ -51,7 +52,7 @@ exports.deleteResource = async (resourceId) => {
 exports.getAllResources = async () => {
     return await db.selectFrom('resource as r')
         .leftJoin('category as c', 'r.category_id', 'c.id')
-        .leftJoin('status as s', 'r.status_id', 's.id')
+        .leftJoin('resource_status as s', 'r.status_id', 's.id')
         .select([
             'r.id',
             'r.title',
@@ -69,7 +70,7 @@ exports.getAllResources = async () => {
 exports.getResourceById = async (resourceId) => {
     return await db.selectFrom('resource as r')
         .leftJoin('category as c', 'r.category_id', 'c.id')
-        .leftJoin('status as s', 'r.status_id', 's.id')
+        .leftJoin('resource_status as s', 'r.status_id', 's.id')
         .select([
             'r.id',
             'r.title',
@@ -90,7 +91,7 @@ exports.getResourceById = async (resourceId) => {
 exports.filterResources = async (filters) => {
     let query = db.selectFrom('resource as r')
         .leftJoin('category as c', 'r.category_id', 'c.id')
-        .leftJoin('status as s', 'r.status_id', 's.id')
+        .leftJoin('resource_status as s', 'r.status_id', 's.id')
         .select([
             'r.id',
             'r.title',
@@ -153,3 +154,50 @@ exports.changeResourceStatus = async (resourceId, statusId) => {
     }
     return updated;
 };
+
+exports.validatePurchaseRequest = async (resourceId, buyerId) => {
+    const resource = await db.selectFrom('resource')
+        .select(['owner_id', 'status_id'])
+        .where('id', '=', parseInt(resourceId))
+        .executeTakeFirst();
+
+    if (!resource) {
+        throw new Error('Resource not found');
+    }
+    if (resource.status_id !== 1) {
+        throw new Error('Resource is not available for purchase');
+    }
+    if (resource.owner_id === parseInt(buyerId)) {
+        throw new Error('Buyer cannot be the owner of the resource');
+    }
+
+    return resource.owner_id;
+};
+
+exports.reserveResource = async (resourceId) => {
+  const updated = await db.updateTable('resource')
+    .set({ status_id: 2 }) // RESERVED
+    .where('id', '=', resourceId)
+    .where('status_id', '=', 1)
+    .executeTakeFirst();
+
+  if (!updated) {
+    throw new Error('Resource could not be reserved');
+  }
+}
+
+exports.resourceApproved = async (resourceId) => {
+    await db.updateTable('resource')
+        .set({ status_id: 3 }) // SOLD
+        .where('id', '=', parseInt(resourceId))
+        .where('status_id', '=', 2) // RESERVED
+        .executeTakeFirst();
+}
+
+exports.resourceRejected = async (resourceId) => {
+    await db.updateTable('resource')
+        .set({ status_id: 1 }) // AVAILABLE
+        .where('id', '=', parseInt(resourceId))
+        .where('status_id', '=', 2) // RESERVED
+        .executeTakeFirst();
+}

@@ -1,6 +1,5 @@
 const { db } = require("../db/db");
-const { publishPurchaseCreated } = require("../events/operationPublisher");
-const { publishPurchaseConfirmed } = require("../events/operationPublisher");
+const {  publishPurchaseRequested, publishPurchaseApproved, publishPurchaseRejected } = require("../events/operationPublisher");
 
 exports.createPurchaseReq = async (purchaseData) => {
     const newPurchase = await db
@@ -8,26 +7,69 @@ exports.createPurchaseReq = async (purchaseData) => {
       .values({
         buyer_id: purchaseData.buyerId,
         resource_id: purchaseData.resourceId,
-        seller_id: purchaseData.sellerId,
-        status_id: purchaseData.statusId,
+        status_id: 1,
       })
       .returningAll()
       .executeTakeFirst();
 
-  publishPurchaseCreated({
+  publishPurchaseRequested({
+    purchaseId: newPurchase.id,
     resourceId: newPurchase.resource_id,
-    statusId: newPurchase.status_id,
+    buyerId: newPurchase.buyer_id,
   });
 
   return newPurchase;
 };
 
-exports.approvePurchaseReq = async (resourceId) => {
+exports.resourceAvailable = async (purchaseId, ownerId) => {
+  const updated =  await db
+      .updateTable('purchases')
+      .set({ status_id: 2, seller_id: ownerId }) // AWAITING_SELLER
+      .where('id', '=', purchaseId)
+      .where('status_id', '=', 1) // REQUESTED
+      .returningAll()
+      .executeTakeFirst();
+  if (!updated) {
+    throw new Error('Purchase not found or not in REQUESTED status');
+  }
+  return updated;
+}
+
+exports.resourceFailed = async (purchaseId) => {
+  const updated =  await db
+      .updateTable('purchases')
+      .set({ status_id: 7 }) // FAILED
+      .where('id', '=', purchaseId)
+      .where('status_id', '=', 1) // REQUESTED
+      .returningAll()
+      .executeTakeFirst();
+  if (!updated) {
+    throw new Error('Purchase not found or not in REQUESTED status');
+  }
+  return updated;
+};
+
+exports.approvePurchaseReq = async (purchaseId, userId) => {
+  // Verify that the user is authorized to approve the purchase
+  const purchase = await db
+    .selectFrom('purchases')
+    .selectAll()
+    .where('id', '=', purchaseId)
+    .executeTakeFirst();
+
+  if (!purchase) {
+    throw new Error('Purchase not found');
+  }
+
+  if (purchase.seller_id !== userId) {
+    throw new Error('User not authorized to approve this purchase');
+  }
+
   const updated = await db
       .updateTable('purchases')
-      .set({ status_id: 5 }) // APPROVED
-      .where('resource_id', '=', resourceId)
-      .where('status_id', '=', 4) // PENDING
+      .set({ status_id: 3 }) // APPROVED
+      .where('id', '=', purchaseId)
+      .where('status_id', '=', 2) // AWAITING_SELLER    
       .returningAll()
       .executeTakeFirst();
 
@@ -35,63 +77,79 @@ exports.approvePurchaseReq = async (resourceId) => {
       throw new Error('No pending purchase found to approve');
     }
 
-    publishPurchaseConfirmed({
-      resourceId,
-      statusId: 5,
+    publishPurchaseApproved({
+      purchaseId: purchaseId,
+      resourceId: purchase.resource_id,
     });
 
     return updated;
 };
 
-exports.rejectPurchaseReq = async (resourceId) => {
-    const updated = await db
+exports.rejectPurchaseReq = async (purchaseId, userId) => {
+  // Verify that the user is authorized to reject the purchase
+  const purchase = await db
+    .selectFrom('purchases')
+    .selectAll()
+    .where('id', '=', purchaseId)
+    .executeTakeFirst();
+
+  if (!purchase) {
+    throw new Error('Purchase not found');
+  }
+
+  if (purchase.seller_id !== userId) {
+    throw new Error('User not authorized to approve this purchase');
+  }
+
+  const updated = await db
       .updateTable('purchases')
-      .set({ status_id: 6 }) // REJECTED
-      .where('resource_id', '=', resourceId)
-      .where('status_id', '=', 4) // PENDING
+      .set({ status_id: 4 }) // REJECTED
+      .where('id', '=', purchaseId)
+      .where('status_id', '=', 2) // AWAITING_SELLER
       .returningAll()
       .executeTakeFirst();
 
-    if (!updated) {
-      throw new Error('No pending purchase found to reject');
-    }
+  if (!updated) {
+    throw new Error('No pending purchase found to reject');
+  }
 
-    publishPurchaseConfirmed({
-      resourceId,
-      statusId: 6,
-    });
+  publishPurchaseRejected({
+    purchaseId: purchaseId,
+    resourceId: purchase.resource_id,
+  });
 
-    return updated;
+  return updated;
 };
 
 exports.getPurchasesByUser = async (userId) => {
   return await db
-      .selectFrom('purchases')
-      .innerJoin('status', 'status.id', 'purchases.status_id')
-      .select([
-        'purchases.id',
-        'purchases.resource_id',
-        'purchases.seller_id',
-        'purchases.status_id',
-        'purchases.created_at',
-        'status.name as status_name',
-      ])
-      .where('purchases.buyer_id', '=', userId)
-      .execute();
+    .selectFrom('purchases as p')
+    .innerJoin('purchase_status as s', 's.id', 'p.status_id')
+    .select([
+      'p.id',
+      'p.resource_id',
+      'p.seller_id',
+      'p.status_id',
+      'p.created_at',
+      's.name as status_name',
+    ])
+    .where('p.buyer_id', '=', userId)
+    .execute();
 };
 
+
 exports.getAllPurchases = async () => {
-    return await db
-      .selectFrom('purchases')
-      .innerJoin('status', 'status.id', 'purchases.status_id')
-      .select([
-        'purchases.id',
-        'purchases.buyer_id',
-        'purchases.resource_id',
-        'purchases.seller_id',
-        'purchases.status_id',
-        'purchases.created_at',
-        'status.name as status_name',
-      ])
-      .execute();
+  return await db
+    .selectFrom('purchases as p')
+    .innerJoin('purchase_status as s', 's.id', 'p.status_id')
+    .select([
+      'p.id',
+      'p.buyer_id',
+      'p.resource_id',
+      'p.seller_id',
+      'p.status_id',
+      'p.created_at',
+      's.name as status_name',
+    ])
+    .execute();
 };

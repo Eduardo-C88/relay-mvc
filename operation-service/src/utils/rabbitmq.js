@@ -5,6 +5,9 @@ let channel = null;
 
 const AMQP_URL = process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672';
 
+// Queue of callbacks to run when channel is ready
+const readyCallbacks = [];
+
 /**
  * Connect to RabbitMQ and create a channel.
  * Reconnects automatically on failure.
@@ -28,6 +31,10 @@ async function connectRabbitMQ() {
 
     channel = await connection.createChannel();
     console.log("✅ RabbitMQ connected and channel created");
+
+    // Run all callbacks waiting for channel
+    readyCallbacks.forEach(cb => cb(channel));
+
     return channel;
   } catch (err) {
     console.error("Failed to connect to RabbitMQ, retrying in 5s...", err);
@@ -44,4 +51,16 @@ function getChannel() {
   return channel;
 }
 
-module.exports = { connectRabbitMQ, getChannel };
+/**
+ * Run a function once the channel is ready
+ * Useful for starting consumers safely
+ */
+function onChannelReady(callback) {
+  if (channel) {
+    callback(channel);
+  } else {
+    readyCallbacks.push(callback);
+  }
+}
+
+module.exports = { connectRabbitMQ, getChannel, onChannelReady };

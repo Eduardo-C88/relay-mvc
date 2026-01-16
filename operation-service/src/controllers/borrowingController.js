@@ -1,5 +1,5 @@
 const borrowingService = require("../services/borrowingService");
-const resourceClient = require("../utils/resourceClient");
+//const resourceClient = require("../utils/resourceClient");
 
 exports.createBorrow = async (req, res) => {
   const resourceId = parseInt(req.params.id);

@@ -3,8 +3,9 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("../static/swagger/swagger.json");
-const { connectRabbitMQ } = require("./utils/rabbitmq");
-const { initOperationPublisher } = require("./events/operationPublisher");
+const { connectRabbitMQ, onChannelReady } = require("./utils/rabbitmq");
+const { initOperationMessaging } = require("./events/operationPublisher");
+const { startOperationConsumers } = require("./events/operationConsumer");
 
 // App Routes
 const purchasesRoutes = require("./routes/purchasesRoutes");
@@ -27,10 +28,12 @@ app.use("/apidoc", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
   await connectRabbitMQ();  // Ensure channel is created
 
   // Initialize publishers
-  await initOperationPublisher();
+  await initOperationMessaging();
 
   console.log("✅ All RabbitMQ publishers initialized");
 })();
+// 🔥 Register consumers SAFELY
+onChannelReady(startOperationConsumers);
 
 //app.use(express.json());
 

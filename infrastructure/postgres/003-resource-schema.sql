@@ -1,10 +1,18 @@
 \connect resource_db;
 
 -- 1. Status table
-CREATE TABLE status (
+CREATE TABLE resource_status (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name TEXT NOT NULL UNIQUE
 );
+
+INSERT INTO resource_status (name) 
+VALUES
+  ('AVAILABLE'),
+  ('RESERVED'),
+  ('SOLD'),
+  ('BORROWED'),
+  ('RETURNED');
 
 -- 2. Category table
 CREATE TABLE category (
@@ -29,7 +37,7 @@ CREATE TABLE resource (
     title TEXT NOT NULL,
     category_id INT REFERENCES category(id) ON DELETE SET NULL,
     description TEXT,
-    status_id INT DEFAULT 1 REFERENCES status(id),
+    status_id INT NOT NULL REFERENCES resource_status(id) DEFAULT 1,
     price FLOAT,
     image_url TEXT,
     created_at TIMESTAMP DEFAULT now()
@@ -47,7 +55,7 @@ CREATE TABLE request (
     title TEXT NOT NULL,
     description TEXT,
     category_id INT REFERENCES category(id) ON DELETE SET NULL,
-    status_id INT REFERENCES status(id) ON DELETE SET NULL,
+    status_id INT REFERENCES resource_status(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT now()
 );
 
@@ -56,10 +64,7 @@ CREATE INDEX idx_request_requester_id ON request(requester_id);
 CREATE INDEX idx_request_category_id ON request(category_id);
 CREATE INDEX idx_request_status_id ON request(status_id);
 
--- 6. Seed default status (optional)
-INSERT INTO status (name) VALUES ('AVAILABLE'), ('BORROWED'), ('SOLD'),('PENDING'), ('APPROVED'), ('REJECTED');
-
--- 7. Seed Resource Categories
+-- 6. Seed Resource Categories
 INSERT INTO category (name, description) VALUES
   ('Electronics', 'Electronic devices such as calculators, laptops, tablets, and accessories'),
   ('Books', 'Books, textbooks, and academic materials'),

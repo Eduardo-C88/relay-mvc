@@ -4,7 +4,7 @@ const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('../static/swagger/swagger.json');
 const { connectRabbitMQ } = require("./utils/rabbitmq");
-const { initUserPublisher } = require("./events/userPublisher");
+const { initUserMessaging } = require("./events/userPublisher");
 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -26,7 +26,7 @@ app.use('/apidoc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
   await connectRabbitMQ();  // Ensure channel is created
 
   // Initialize publishers
-  await initUserPublisher();
+  await initUserMessaging();
 
   console.log("✅ All RabbitMQ publishers initialized");
 })();

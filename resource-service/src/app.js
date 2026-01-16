@@ -4,11 +4,8 @@ const path = require("path");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("../static/swagger/swagger.json");
 const { connectRabbitMQ, onChannelReady } = require("./utils/rabbitmq");
-const {
-  startUserEventsConsumer, 
-  startPurchaseRequestConsumer,
-  startPurchaseConfirmedConsumer
-} = require("./events/resourceConsumer");
+const { startResourceConsumers } = require("./events/resourceConsumer");
+const { initResourceMessaging } = require("./events/resourcePublisher");
 
 // App Routes
 const resourcesRoutes = require("./routes/resourcesRoutes");
@@ -25,13 +22,16 @@ app.use("/", express.static(path.join(__dirname, "../static")));
 app.use("/doc", express.static(path.join(__dirname, "../static/doc")));
 app.use("/apidoc", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// 🔥 Register consumers SAFELY
-onChannelReady(startUserEventsConsumer);
-onChannelReady(startPurchaseRequestConsumer);
-onChannelReady(startPurchaseConfirmedConsumer);
+//Connect to RabbitMQ
+(async () => {
+  await connectRabbitMQ();  // Ensure channel is created
 
-// Connect RabbitMQ (will trigger consumers)
-connectRabbitMQ();
+  // Initialize publishers
+  await initResourceMessaging();
+  console.log("✅ All RabbitMQ publishers initialized");
+})();
+// 🔥 Register consumers SAFELY
+onChannelReady(startResourceConsumers);
 
 // app.use Routes
 app.use(resourcesRoutes);
