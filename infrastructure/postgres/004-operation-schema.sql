@@ -44,7 +44,7 @@ CREATE TABLE purchases (
 
     buyer_id INT NOT NULL,
     resource_id INT NOT NULL,
-    seller_id INT NOT NULL,
+    seller_id INT,
 
     agreed_price FLOAT,
 
@@ -66,7 +66,7 @@ CREATE TABLE borrowings (
 
     borrower_id INT NOT NULL,
     resource_id INT NOT NULL,
-    owner_id INT NOT NULL,
+    owner_id INT,
 
     status_id INT NOT NULL REFERENCES borrowing_status(id),
 

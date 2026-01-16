@@ -1,23 +1,13 @@
 const purchasesService = require("../services/purchasesService");
-const resourceClient = require("../utils/resourceClient");
 
 exports.createPurchase = async (req, res) => {
   const resourceId = parseInt(req.params.resourceId);
   const buyerId = req.user.id;
 
   try {
-    const availability = await resourceClient.checkAvailability(resourceId, buyerId);
-
-    if (!availability.available) {
-      console.log(`Resource ${resourceId} is not available for purchase by buyer ${buyerId}`);
-      return res.status(400).json({ error: "Resource is not available for purchase" });
-    }
-
     const purchaseData = {
       buyerId,
       resourceId,
-      sellerId: availability.ownerId,
-      statusId: 4
     };
 
     const purchase = await purchasesService.createPurchaseReq(purchaseData);
@@ -31,21 +21,14 @@ exports.createPurchase = async (req, res) => {
 
 
 exports.approvePurchase = async (req, res) => {
-  const resourceId = parseInt(req.params.resourceId);
+  const purchaseId = parseInt(req.params.purchaseId);
   const userId = req.user.id;
 
-  if (isNaN(resourceId)) {
-    return res.status(400).json({ error: "Invalid resource ID" });
+  if (isNaN(purchaseId)) {
+    return res.status(400).json({ error: "Invalid purchase ID" });
   }
   try {
-    // Check if the purchase can be approved
-    const confirmable = await resourceClient.checkConfirmable(resourceId, userId);
-    if (!confirmable) {
-      console.log(`Purchase for resource ${resourceId} cannot be approved by user ${userId}`);
-      return res.status(400).json({ error: "Purchase cannot be approved" });
-    }
-
-    const updatedPurchase = await purchasesService.approvePurchaseReq(resourceId);
+    const updatedPurchase = await purchasesService.approvePurchaseReq(purchaseId, userId);
     res.status(200).json(updatedPurchase);
   } catch (error) {
     console.error("Failed to approve purchase:", error);
@@ -54,20 +37,13 @@ exports.approvePurchase = async (req, res) => {
 };
 
 exports.rejectPurchase = async (req, res) => {
-  const resourceId = parseInt(req.params.resourceId);
+  const purchaseId = parseInt(req.params.purchaseId);
   const userId = req.user.id;
-  if (isNaN(resourceId)) {
-    return res.status(400).json({ error: "Invalid resource ID" });
+  if (isNaN(purchaseId)) {
+    return res.status(400).json({ error: "Invalid purchase ID" });
   }
   try {
-    // Check if the purchase can be rejected
-    const confirmable = await resourceClient.checkConfirmable(resourceId, userId);
-    if (!confirmable) {
-      console.log(`Purchase for resource ${resourceId} cannot be rejected by user ${userId}`);
-      return res.status(400).json({ error: "Purchase cannot be rejected" });
-    }
-
-    const updatedPurchase = await purchasesService.rejectPurchaseReq(resourceId, userId);
+    const updatedPurchase = await purchasesService.rejectPurchaseReq(purchaseId, userId);
     res.status(200).json(updatedPurchase);
   } catch (error) {
     console.error("Failed to reject purchase:", error);
