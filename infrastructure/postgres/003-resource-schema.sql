@@ -55,7 +55,7 @@ CREATE TABLE request (
     title TEXT NOT NULL,
     description TEXT,
     category_id INT REFERENCES category(id) ON DELETE SET NULL,
-    status_id INT REFERENCES status(id) ON DELETE SET NULL,
+    status_id INT REFERENCES resource_status(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT now()
 );
 
