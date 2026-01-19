@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: ed18c/gateway-service:8d06298
+          image: ed18c/gateway-service:d447307
           ports:
             - containerPort: 3000
           env:
@@ -33,6 +33,8 @@ kind: Service
 metadata:
   name: gateway-service
   namespace: relay
+  labels:
+    app: gateway-service
 spec:
   selector:
     app: gateway

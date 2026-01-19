@@ -6,8 +6,7 @@ const swaggerDocument = require('../static/swagger/swagger.json');
 const { connectRabbitMQ } = require("./utils/rabbitmq");
 const { initUserMessaging } = require("./events/userPublisher");
 const client = require('prom-client');
-const register = new client.Registry();
-client.collectDefaultMetrics({ register });
+client.collectDefaultMetrics();
 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -30,8 +29,8 @@ app.use('/health', (req, res) => {
 
 // Expose the metrics endpoint
 app.get('/metrics', async (req, res) => {
-  res.setHeader('Content-Type', register.contentType);
-  res.send(await register.metrics());
+  res.setHeader('Content-Type', client.register.contentType);
+  res.send(await client.register.metrics());
 });
 
 // Connect to RabbitMQ

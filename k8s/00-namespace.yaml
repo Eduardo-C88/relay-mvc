@@ -4,3 +4,10 @@ metadata:
   name: relay
   labels:
     name: relay
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    name: monitoring

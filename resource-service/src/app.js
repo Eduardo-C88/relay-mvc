@@ -7,8 +7,7 @@ const { connectRabbitMQ, onChannelReady } = require("./utils/rabbitmq");
 const { startResourceConsumers } = require("./events/resourceConsumer");
 const { initResourceMessaging } = require("./events/resourcePublisher");
 const client = require('prom-client');
-const register = new client.Registry();
-client.collectDefaultMetrics({ register });
+client.collectDefaultMetrics();
 
 // App Routes
 const resourcesRoutes = require("./routes/resourcesRoutes");
@@ -31,8 +30,8 @@ app.use('/health', (req, res) => {
 
 // Expose the metrics endpoint
 app.get('/metrics', async (req, res) => {
-  res.setHeader('Content-Type', register.contentType);
-  res.send(await register.metrics());
+  res.setHeader('Content-Type', client.register.contentType);
+  res.send(await client.register.metrics());
 });
 
 //Connect to RabbitMQ

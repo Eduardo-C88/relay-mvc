@@ -11,7 +11,7 @@ spec:
       - relay
   selector:
     matchExpressions:
-      - {key: app, operator: In, values: [user-service, resource-service, operation-service, gateway]}
+      - {key: app, operator: In, values: [user-service, resource-service, operation-service, gateway-service]}
   endpoints:
   - port: http
     path: /metrics
