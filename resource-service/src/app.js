@@ -34,6 +34,15 @@ app.get('/metrics', async (req, res) => {
   res.send(await client.register.metrics());
 });
 
+// Add this to your routes
+app.get('/stress', (req, res) => {
+  const end = Date.now() + 5000; // Stress CPU for 5 seconds
+  while (Date.now() < end) {
+    Math.random() * Math.random(); // Do useless math
+  }
+  res.send("CPU Stress Test Complete");
+});
+
 //Connect to RabbitMQ
 (async () => {
   await connectRabbitMQ();  // Ensure channel is created
