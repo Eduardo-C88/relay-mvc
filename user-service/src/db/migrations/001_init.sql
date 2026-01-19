@@ -4,7 +4,6 @@
 -- CREATE TYPE user_role AS ENUM ('USER', 'ADMIN', 'GUEST');
 
 -- 2. Tables
-\connect auth_db;
 
 CREATE TABLE university (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, -- Modern auto-increment

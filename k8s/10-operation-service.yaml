@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: operation-service
+  namespace: relay
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: operation-service
+  template:
+    metadata:
+      labels:
+        app: operation-service
+    spec:
+      # --- Wait for Postgres to be ready before starting ---
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.28
+        command: ['sh', '-c', "until nslookup postgres-service.relay.svc.cluster.local; do echo waiting for postgres; sleep 2; done"]
+      - name: run-migrations
+        image: ed18c/operation-service:b6d7b09
+        command: ["npm", "run", "migrate"]
+        env:
+          - name: OPERATION_DATABASE_URL
+            value: "postgres://postgres:postgres@postgres-service:5432/operation_db"
+
+      containers:
+        - name: operation-service
+          image: ed18c/operation-service:b6d7b09
+          ports:
+            - containerPort: 3003
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+          env:
+            # JWT Secrets
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_SECRET
+            - name: REFRESH_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: REFRESH_JWT_SECRET
+            
+            # Database Configuration
+            - name: OPERATION_DATABASE_URL
+              value: "postgres://postgres:postgres@postgres-service:5432/operation_db"
+            
+            - name: OPERATION_PORT
+              value: "3003"
+            
+            # RabbitMQ Configuration
+            - name: RABBITMQ_URL
+              value: "amqp://admin:admin@rabbitmq-service:5672"
+
+          # ---Health Checks ---
+          livenessProbe:
+            httpGet:
+              path: /health # Or whatever health endpoint your app has
+              port: 3003
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: operation-service
+  namespace: relay
+spec:
+  selector:
+    app: operation-service
+  ports:
+    - protocol: TCP
+      port: 3003
+      targetPort: 3003
+  type: ClusterIP
+        

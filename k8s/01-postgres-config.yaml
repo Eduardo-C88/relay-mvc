@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: relay
+data:
+  POSTGRES_DB: postgres
+  POSTGRES_DB_AUTH: auth_db
+  POSTGRES_DB_RESOURCE: resource_db
+  POSTGRES_DB_OPERATION: operation_db
+  POSTGRES_HOST: postgres-cluster
+  POSTGRES_PORT: "5432"

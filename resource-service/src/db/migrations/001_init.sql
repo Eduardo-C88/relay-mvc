@@ -1,5 +1,4 @@
-\connect resource_db;
-
+-- Migration Script for Resource Service Database Initialization
 -- 1. Status table
 CREATE TABLE resource_status (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

@@ -1,8 +1,5 @@
-\connect operation_db;
-
--- =========================
+-- Migration Script for Operation Service Database Initialization
 -- 1. Status table
--- =========================
 CREATE TABLE purchase_status (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name TEXT NOT NULL UNIQUE
@@ -36,9 +33,7 @@ VALUES
     ('COMPLETED'),
     ('FAILED');
 
--- =========================
 -- 2. Purchases table
--- =========================
 CREATE TABLE purchases (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
@@ -58,9 +53,7 @@ CREATE INDEX idx_purchases_resource_id ON purchases(resource_id);
 CREATE INDEX idx_purchases_seller_id ON purchases(seller_id);
 CREATE INDEX idx_purchases_status_id ON purchases(status_id);
 
--- =========================
 -- 3. Borrowings table
--- =========================
 CREATE TABLE borrowings (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 

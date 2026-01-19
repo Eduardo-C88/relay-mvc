@@ -23,6 +23,10 @@ app.use("/", express.static(path.join(__dirname, "../static")));
 app.use("/doc", express.static(path.join(__dirname, "../static/doc")));
 app.use("/apidoc", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+app.use('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 //Connect to RabbitMQ and start consumers
 (async () => {
   await connectRabbitMQ();  // Ensure channel is created
