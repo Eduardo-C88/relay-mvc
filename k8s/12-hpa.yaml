@@ -1,4 +1,4 @@
-apiVersion: v1
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: gateway-hpa
@@ -41,7 +41,7 @@ spec:
         periodSeconds: 60
       selectPolicy: Max
 ---
-apiVersion: v1
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: user-hpa
@@ -84,7 +84,7 @@ spec:
         periodSeconds: 60
       selectPolicy: Max
 ---
-apiVersion: v1
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: resource-hpa
@@ -127,7 +127,7 @@ spec:
         periodSeconds: 60
       selectPolicy: Max
 ---
-apiVersion: v1
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: operation-hpa

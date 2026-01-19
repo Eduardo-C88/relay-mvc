@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: ed18c/gateway-service:08388ef
+          image: ed18c/gateway-service:8d06298
           ports:
             - containerPort: 3000
           env:
