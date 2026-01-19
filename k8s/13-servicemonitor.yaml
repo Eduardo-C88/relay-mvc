@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: relay-monitor
+  namespace: monitoring
+  labels:
+    release: dash
+spec:
+  namespaceSelector:
+    matchNames:
+      - relay
+  selector:
+    matchExpressions:
+      - {key: app, operator: In, values: [user-service, resource-service, operation-service, gateway]}
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s

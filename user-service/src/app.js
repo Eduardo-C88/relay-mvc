@@ -5,6 +5,9 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('../static/swagger/swagger.json');
 const { connectRabbitMQ } = require("./utils/rabbitmq");
 const { initUserMessaging } = require("./events/userPublisher");
+const client = require('prom-client');
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -23,6 +26,12 @@ app.use('/apidoc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use('/health', (req, res) => {
   res.status(200).send('OK');
+});
+
+// Expose the metrics endpoint
+app.get('/metrics', async (req, res) => {
+  res.setHeader('Content-Type', register.contentType);
+  res.send(await register.metrics());
 });
 
 // Connect to RabbitMQ

@@ -37,7 +37,8 @@ spec:
   selector:
     app: gateway
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80 # We use port 80 for the service to make it web-standard
       targetPort: 3000
   type: ClusterIP

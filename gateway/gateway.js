@@ -4,6 +4,9 @@ const morgan = require("morgan");
 const helmet = require("helmet");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
+const client = require('prom-client');
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
 
 const setupRoutes = require("./routes");
 const errorHandler = require("./middleware/errorHandler");
@@ -20,6 +23,16 @@ app.use(rateLimit({
     windowMs: 60 * 1000,
     max: 100,
 }));
+
+app.use('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+// Expose the metrics endpoint
+app.get('/metrics', async (req, res) => {
+  res.setHeader('Content-Type', register.contentType);
+  res.send(await register.metrics());
+});
 
 // Register gateway routing
 setupRoutes(app);

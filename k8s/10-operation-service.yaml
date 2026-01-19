@@ -78,7 +78,8 @@ spec:
   selector:
     app: operation-service
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 3003
       targetPort: 3003
   type: ClusterIP

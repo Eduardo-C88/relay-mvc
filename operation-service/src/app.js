@@ -6,6 +6,9 @@ const swaggerDocument = require("../static/swagger/swagger.json");
 const { connectRabbitMQ, onChannelReady } = require("./utils/rabbitmq");
 const { initOperationMessaging } = require("./events/operationPublisher");
 const { startOperationConsumers } = require("./events/operationConsumer");
+const client = require('prom-client');
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
 
 // App Routes
 const purchasesRoutes = require("./routes/purchasesRoutes");
@@ -25,6 +28,12 @@ app.use("/apidoc", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use('/health', (req, res) => {
   res.status(200).send('OK');
+});
+
+// Expose the metrics endpoint
+app.get('/metrics', async (req, res) => {
+  res.setHeader('Content-Type', register.contentType);
+  res.send(await register.metrics());
 });
 
 //Connect to RabbitMQ and start consumers
