@@ -36,22 +36,19 @@ app.get('/metrics', async (req, res) => {
   res.send(await register.metrics());
 });
 
-app.get('/stress-all', async (req, res) => {
+app.get('/api/stress-all', async (req, res) => {
     try {
-        // Fire requests to all services simultaneously
         await Promise.all([
-            axios.get('http://user-service:3001/api/users/stress'),
-            axios.get('http://resource-service:3002/api/resources/stress'),
-            axios.get('http://operation-service:3003/api/operations/stress')
+            axios.get('http://user-service:3001/api/users/stress', { timeout: 15000 }),
+            axios.get('http://resource-service:3002/api/resources/stress', { timeout: 15000 }),
+            axios.get('http://operation-service:3003/api/operation/stress', { timeout: 15000 })
         ]);
-
-        // Optional: Make the Gateway itself work hard too
-        const end = Date.now() + 1000; 
-        while (Date.now() < end) { Math.random(); }
-
         res.send("🔥 All services stressed!");
     } catch (err) {
-        res.status(500).send("One or more services failed under load");
+        // This will tell you EXACTLY which service failed in your terminal
+        console.error("Stress Test Failure at:", err.config?.url);
+        console.error("Error Message:", err.message);
+        res.status(500).send(`Service Failed: ${err.config?.url || 'Unknown'}`);
     }
 });
 
