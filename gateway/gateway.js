@@ -36,7 +36,7 @@ app.get('/metrics', async (req, res) => {
   res.send(await register.metrics());
 });
 
-app.get('/api/stress-all', async (req, res) => {
+app.get('/stress-all', async (req, res) => {
     try {
         // Fire requests to all services simultaneously
         await Promise.all([
