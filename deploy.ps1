@@ -71,5 +71,5 @@ Write-Host "API Ingress:     http://api.relay.local"
 Write-Host "Grafana User:    admin"
 Write-Host "Grafana Pass:    $password"
 Write-Host "--------------------------------------------------"
-Write-Host "REQUIRED ACTION 1: Run 'minikube tunnel' in an Admin terminal." -ForegroundColor $CYAN
-Write-Host "REQUIRED ACTION 2: Run 'kubectl port-forward svc/dash-grafana -n monitoring 3001:80' to see metrics." -ForegroundColor $CYAN
+Write-Host "REQUIRED ACTION 1: Run 'minikube tunnel' in an Admin terminal." -ForegroundColor $BLUE
+Write-Host "REQUIRED ACTION 2: Run 'kubectl port-forward svc/dash-grafana -n monitoring 3001:80' to see metrics." -ForegroundColor $BLUE

@@ -2,8 +2,8 @@
 # This script launches parallel background jobs to generate high traffic.
 
 param (
-    [string]$Url = "http://api.relay.local/health",
-    [int]$Threads = 10,       # Number of concurrent "users"
+    [string]$Url = "http://api.relay.local/api/users/stress", # Target URL for load test
+    [int]$Threads = 5,       # Number of concurrent "users"
     [int]$DurationSeconds = 60 # How long to run the test
 )
 
@@ -21,12 +21,11 @@ Get-Job | Remove-Job -Force
 # 2. Define the attack block
 $ScriptBlock = {
     param($TargetUrl)
-    $count = 0
+    $client = New-Object System.Net.Http.HttpClient
     while ($true) {
         try {
-            # Use basic parsing for speed, discard output to save memory
-            $null = Invoke-WebRequest -Uri $TargetUrl -UseBasicParsing -TimeoutSec 2
-            $count++
+            $task = $client.GetAsync($TargetUrl)
+            $task.Wait() # Force high-speed synchronous load
         } catch {
             # Ignore errors (common during high load)
         }
