@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: ed18c/gateway-service:374574f
+          image: ed18c/gateway-service:58eb3af
           ports:
             - containerPort: 3000
           env:
@@ -30,7 +30,7 @@ spec:
           resources:
             limits:
               memory: "256Mi"
-              cpu: "200m"
+              #cpu: "200m"
             requests:
               memory: "64Mi"
               cpu: "50m"

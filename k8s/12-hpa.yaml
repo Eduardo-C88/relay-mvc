@@ -22,21 +22,24 @@ spec:
       name: memory
       target:
         type: Utilization
-        averageUtilization: 70 # Memory is usually more stable, set higher to avoid flickering
+        averageUtilization: 70
   behavior:
     scaleUp:
-      stabilizationWindowSeconds: 0 # Scale up immediately when load hits
+      stabilizationWindowSeconds: 60 
       policies:
       - type: Percent
         value: 100
-        periodSeconds: 15 # Double the pods every 15 seconds if needed
+        periodSeconds: 60 
+      - type: Pods
+        value: 2
+        periodSeconds: 60
       selectPolicy: Max
     scaleDown:
-      stabilizationWindowSeconds: 60 # Reduced from 300 to 60 for faster demo feedback
+      stabilizationWindowSeconds: 300 
       policies:
-      - type: Percent
-        value: 100
-        periodSeconds: 15 # Allows full scale down to minReplicas quickly after cooldown
+      - type: Pods
+        value: 1
+        periodSeconds: 60 
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -62,21 +65,24 @@ spec:
       name: memory
       target:
         type: Utilization
-        averageUtilization: 70 # Memory is usually more stable, set higher to avoid flickering
+        averageUtilization: 70
   behavior:
     scaleUp:
-      stabilizationWindowSeconds: 0 # Scale up immediately when load hits
+      stabilizationWindowSeconds: 60 
       policies:
       - type: Percent
         value: 100
-        periodSeconds: 15 # Double the pods every 15 seconds if needed
+        periodSeconds: 60 
+      - type: Pods
+        value: 2
+        periodSeconds: 60
       selectPolicy: Max
     scaleDown:
-      stabilizationWindowSeconds: 60 # Reduced from 300 to 60 for faster demo feedback
+      stabilizationWindowSeconds: 300 
       policies:
-      - type: Percent
-        value: 100
-        periodSeconds: 15 # Allows full scale down to minReplicas quickly after cooldown
+      - type: Pods
+        value: 1
+        periodSeconds: 60 
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -102,21 +108,24 @@ spec:
       name: memory
       target:
         type: Utilization
-        averageUtilization: 70 # Memory is usually more stable, set higher to avoid flickering
+        averageUtilization: 70
   behavior:
     scaleUp:
-      stabilizationWindowSeconds: 0 # Scale up immediately when load hits
+      stabilizationWindowSeconds: 60 
       policies:
       - type: Percent
         value: 100
-        periodSeconds: 15 # Double the pods every 15 seconds if needed
+        periodSeconds: 60 
+      - type: Pods
+        value: 2
+        periodSeconds: 60
       selectPolicy: Max
     scaleDown:
-      stabilizationWindowSeconds: 60 # Reduced from 300 to 60 for faster demo feedback
+      stabilizationWindowSeconds: 300 
       policies:
-      - type: Percent
-        value: 100
-        periodSeconds: 15 # Allows full scale down to minReplicas quickly after cooldown
+      - type: Pods
+        value: 1
+        periodSeconds: 60 
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -142,19 +151,21 @@ spec:
       name: memory
       target:
         type: Utilization
-        averageUtilization: 70 # Memory is usually more stable, set higher to avoid flickering
+        averageUtilization: 70
   behavior:
     scaleUp:
-      stabilizationWindowSeconds: 0 # Scale up immediately when load hits
+      stabilizationWindowSeconds: 60 
       policies:
       - type: Percent
         value: 100
-        periodSeconds: 15 # Double the pods every 15 seconds if needed
+        periodSeconds: 60 
+      - type: Pods
+        value: 2
+        periodSeconds: 60
       selectPolicy: Max
     scaleDown:
-      stabilizationWindowSeconds: 60 # Reduced from 300 to 60 for faster demo feedback
+      stabilizationWindowSeconds: 300 
       policies:
-      - type: Percent
-        value: 100
-        periodSeconds: 15 # Allows full scale down to minReplicas quickly after cooldown
-      
+      - type: Pods
+        value: 1
+        periodSeconds: 60 

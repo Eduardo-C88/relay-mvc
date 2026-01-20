@@ -19,7 +19,7 @@ spec:
         image: busybox:1.28
         command: ['sh', '-c', "until nslookup postgres-service.relay.svc.cluster.local; do echo waiting for postgres; sleep 2; done"]
       - name: run-migrations
-        image: ed18c/operation-service:374574f
+        image: ed18c/operation-service:58eb3af
         command: ["npm", "run", "migrate"]
         env:
           - name: OPERATION_DATABASE_URL
@@ -27,13 +27,13 @@ spec:
 
       containers:
         - name: operation-service
-          image: ed18c/operation-service:374574f
+          image: ed18c/operation-service:58eb3af
           ports:
             - containerPort: 3003
           resources:
             limits:
               memory: "256Mi"
-              cpu: "200m"
+              #cpu: "200m"
             requests:
               memory: "64Mi"
               cpu: "50m"

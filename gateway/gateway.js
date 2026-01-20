@@ -36,24 +36,6 @@ app.get('/metrics', async (req, res) => {
   res.send(await register.metrics());
 });
 
-app.get('/api/stress-all', async (req, res) => {
-    console.log("🔥 Stressing all services...");
-    
-    // 1. Shorter loop (1 second) so the Gateway can breathe
-    const end = Date.now() + 1000; 
-    while (Date.now() < end) { Math.random(); }
-
-    // 2. Fire external calls WITHOUT 'await' if you want high concurrency
-    // This lets the Gateway handle the next request immediately
-    Promise.all([
-        axios.get('http://user-service:3001/api/users/stress'),
-        axios.get('http://resource-service:3002/api/resources/stress'),
-        axios.get('http://operation-service:3003/api/operation/stress')
-    ]).catch(err => console.log("Internal stress call failed"));
-
-    res.send("Requests dispatched!");
-});
-
 // Register gateway routing
 setupRoutes(app);
 

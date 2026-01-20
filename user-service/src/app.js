@@ -8,6 +8,8 @@ const { initUserMessaging } = require("./events/userPublisher");
 const client = require('prom-client');
 client.collectDefaultMetrics();
 
+const crypto = require('crypto');
+
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 
@@ -35,11 +37,11 @@ app.get('/metrics', async (req, res) => {
 
 // Add this to your routes
 app.get('/stress', (req, res) => {
-  const end = Date.now() + 5000; // Stress CPU for 5 seconds
+  const end = Date.now() + 5000;
   while (Date.now() < end) {
-    Math.random() * Math.random(); // Do useless math
+    crypto.pbkdf2Sync('pass', 'salt', 1000, 64, 'sha512');
   }
-  res.send("CPU Stress Test Complete");
+  res.send("CPU stressed");
 });
 
 // Connect to RabbitMQ
