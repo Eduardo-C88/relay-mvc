@@ -2,9 +2,9 @@
 # This script launches parallel background jobs to generate high traffic.
 
 param (
-    [string]$Url = "http://api.relay.local/stress-all", # Target URL for load test
+    [string]$Url = "https://api.relay.local/api/stress-all", # Target URL for load test
     [int]$Threads = 5,       # Number of concurrent "users"
-    [int]$DurationSeconds = 60 # How long to run the test
+    [int]$DurationSeconds = 120 # How long to run the test
 )
 
 $ErrorActionPreference = "SilentlyContinue"

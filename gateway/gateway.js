@@ -37,19 +37,21 @@ app.get('/metrics', async (req, res) => {
 });
 
 app.get('/api/stress-all', async (req, res) => {
-    try {
-        await Promise.all([
-            axios.get('http://user-service:3001/stress', { timeout: 15000 }),
-            axios.get('http://resource-service:3002/stress', { timeout: 15000 }),
-            axios.get('http://operation-service:3003/stress', { timeout: 15000 })
-        ]);
-        res.send("🔥 All services stressed!");
-    } catch (err) {
-        // This will tell you EXACTLY which service failed in your terminal
-        console.error("Stress Test Failure at:", err.config?.url);
-        console.error("Error Message:", err.message);
-        res.status(500).send(`Service Failed: ${err.config?.url || 'Unknown'}`);
-    }
+    console.log("🔥 Stressing all services...");
+    
+    // 1. Shorter loop (1 second) so the Gateway can breathe
+    const end = Date.now() + 1000; 
+    while (Date.now() < end) { Math.random(); }
+
+    // 2. Fire external calls WITHOUT 'await' if you want high concurrency
+    // This lets the Gateway handle the next request immediately
+    Promise.all([
+        axios.get('http://user-service:3001/api/users/stress'),
+        axios.get('http://resource-service:3002/api/resources/stress'),
+        axios.get('http://operation-service:3003/api/operation/stress')
+    ]).catch(err => console.log("Internal stress call failed"));
+
+    res.send("Requests dispatched!");
 });
 
 // Register gateway routing

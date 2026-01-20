@@ -19,7 +19,7 @@ spec:
         image: busybox:1.28
         command: ['sh', '-c', "until nslookup postgres-service.relay.svc.cluster.local; do echo waiting for postgres; sleep 2; done"]
       - name: run-migrations
-        image: ed18c/user-service:c650b3b
+        image: ed18c/user-service:374574f
         command: ["npm", "run", "migrate"]
         env:
           - name: AUTH_DATABASE_URL
@@ -27,16 +27,16 @@ spec:
 
       containers:
         - name: user-service
-          image: ed18c/user-service:c650b3b
+          image: ed18c/user-service:374574f
           ports:
             - containerPort: 3001
           resources:
             limits:
               memory: "256Mi"
-              cpu: "500m"
+              cpu: "200m"
             requests:
-              memory: "128Mi"
-              cpu: "250m"
+              memory: "64Mi"
+              cpu: "50m"
           env:
             # JWT Secrets
             - name: JWT_SECRET
