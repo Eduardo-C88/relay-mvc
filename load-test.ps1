@@ -1,77 +1,62 @@
-# ======================================
-
-# Relay-MVC Load Generator (HPA Friendly)
-
-# ======================================
+# Load Test Script for Relay-MVC
+# This script launches parallel background jobs to generate high traffic.
 
 param (
-[string]$Url = "[http://api.relay.local/api/users/stress](http://api.relay.local/api/users/stress)",
-[int]$Workers = 5,
-[int]$DurationSeconds = 120
+    [string]$Url = "https://api.relay.local/api/stress-all", # Target URL for load test
+    [int]$Threads = 5,       # Number of concurrent "users"
+    [int]$DurationSeconds = 120 # How long to run the test
 )
 
 $ErrorActionPreference = "SilentlyContinue"
+$Green = "Green"; $Cyan = "Cyan"; $Yellow = "Yellow"; $Red = "Red"
 
-$GREEN = "Green"
-$CYAN = "Cyan"
-$YELLOW = "Yellow"
-$RED = "Red"
+Write-Host "--- Starting Load Test ---" -ForegroundColor $Cyan
+Write-Host "Target:  $Url" -ForegroundColor $Yellow
+Write-Host "Threads: $Threads" -ForegroundColor $Yellow
+Write-Host "Time:    $DurationSeconds seconds" -ForegroundColor $Yellow
 
-Write-Host "`n=== Load Test Starting ===" -ForegroundColor $CYAN
-Write-Host "Target URL: $Url" -ForegroundColor $YELLOW
-Write-Host "Workers:    $Workers" -ForegroundColor $YELLOW
-Write-Host "Duration:   $DurationSeconds sec`n" -ForegroundColor $YELLOW
-
-# Cleanup any existing jobs
-
+# 1. Cleanup any old jobs
 Get-Job | Remove-Job -Force
 
-# Async, non-blocking worker
-
+# 2. Define the attack block
 $ScriptBlock = {
-param($TargetUrl)
-$client = New-Object System.Net.Http.HttpClient
-while ($true) {
-try {
-$null = $client.GetAsync($TargetUrl)
-} catch {}
-Start-Sleep -Milliseconds 50
+    param($TargetUrl)
+    $client = New-Object System.Net.Http.HttpClient
+    while ($true) {
+        try {
+            $task = $client.GetAsync($TargetUrl)
+            $task.Wait() # Force high-speed synchronous load
+        } catch {
+            # Ignore errors (common during high load)
+        }
+    }
 }
+
+# 3. Launch the fleet
+Write-Host "`nLaunching $Threads parallel workers..." -ForegroundColor $Cyan
+for ($i = 0; $i -lt $Threads; $i++) {
+    Start-Job -ScriptBlock $ScriptBlock -ArgumentList $Url | Out-Null
+    Write-Host "." -NoNewline -ForegroundColor $Green
 }
 
-# Launch workers
+Write-Host "`nLoad generation active!" -ForegroundColor $Green
+Write-Host "Monitoring HPA status for $DurationSeconds seconds..." -ForegroundColor $Cyan
 
-Write-Host "Launching workers..." -ForegroundColor $CYAN
-1..$Workers | ForEach-Object {
-Start-Job -ScriptBlock $ScriptBlock -ArgumentList $Url | Out-Null
-Write-Host "." -NoNewline -ForegroundColor $GREEN
-}
-Write-Host "`nLoad active." -ForegroundColor $GREEN
-
-# Monitor loop
-
+# 4. Monitor loop
 $endTime = (Get-Date).AddSeconds($DurationSeconds)
-
 while ((Get-Date) -lt $endTime) {
-Clear-Host
-Write-Host "=== LOAD TEST RUNNING ===" -ForegroundColor $GREEN
-Write-Host "Time Remaining: $([int]($endTime - (Get-Date)).TotalSeconds)s" -ForegroundColor $YELLOW
-
-```
-Write-Host "`nHPA Status:" -ForegroundColor $CYAN
-kubectl get hpa -n relay
-
-Write-Host "`nPod CPU:" -ForegroundColor $CYAN
-kubectl top pods -n relay | Select-String "service"
-
-Start-Sleep -Seconds 5
-```
-
+    Clear-Host
+    Write-Host "--- LOAD TEST RUNNING ($Threads Threads) ---" -ForegroundColor $Green
+    Write-Host "Time Remaining: $(($endTime - (Get-Date)).Seconds) seconds" -ForegroundColor $Yellow
+    Write-Host "`nCurrent HPA Status (Scaling):" -ForegroundColor $Cyan
+    
+    # Show live scaling status from Kubernetes
+    kubectl get hpa -n relay
+    
+    Start-Sleep -Seconds 5
 }
 
-# Cleanup
-
-Write-Host "`nStopping workers..." -ForegroundColor $RED
+# 5. Cleanup
+Write-Host "`nStopping all workers..." -ForegroundColor $Red
 Get-Job | Stop-Job | Remove-Job -Force
-
-Write-Host "Load test complete." -ForegroundColor $GREEN
+Write-Host "Test Complete." -ForegroundColor $Green
