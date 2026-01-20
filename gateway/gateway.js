@@ -39,9 +39,9 @@ app.get('/metrics', async (req, res) => {
 app.get('/api/stress-all', async (req, res) => {
     try {
         await Promise.all([
-            axios.get('http://user-service:3001/api/users/stress', { timeout: 15000 }),
-            axios.get('http://resource-service:3002/api/resources/stress', { timeout: 15000 }),
-            axios.get('http://operation-service:3003/api/operation/stress', { timeout: 15000 })
+            axios.get('http://user-service:3001/stress', { timeout: 15000 }),
+            axios.get('http://resource-service:3002/stress', { timeout: 15000 }),
+            axios.get('http://operation-service:3003/stress', { timeout: 15000 })
         ]);
         res.send("🔥 All services stressed!");
     } catch (err) {
