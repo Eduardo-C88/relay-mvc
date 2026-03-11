@@ -1,0 +1,86 @@
+# 1. Cluster-wide storage (Remove namespace)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/postgres
+---
+# 2. The StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet 
+metadata:
+  name: postgres-cluster
+  namespace: relay
+spec:
+  serviceName: "postgres-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: postgres-config
+              key: POSTGRES_DB
+        volumeMounts:
+        - name: postgres-storage # This name must match the volumeClaimTemplate name below
+          mountPath: /var/lib/postgresql/data
+        - name: init-db-volume
+          mountPath: /docker-entrypoint-initdb.d/
+      volumes:
+      - name: init-db-volume
+        configMap:
+          name: postgres-init-sql
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      storageClassName: manual
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 5Gi
+---
+# 3. The Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service # This name is what your apps will use to connect
+  namespace: relay
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+  selector:
+    app: postgresql

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-sql
+  namespace: relay
+data:
+  init-multiple-databases.sql: |
+    CREATE DATABASE auth_db;
+    CREATE DATABASE messaging_db;
+    CREATE DATABASE notification_db;
+    CREATE DATABASE resource_db;
+    CREATE DATABASE operation_db;
+    CREATE DATABASE analytics_db;
+    CREATE DATABASE review_db;

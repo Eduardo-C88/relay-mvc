@@ -6,6 +6,10 @@ const swaggerDocument = require("../static/swagger/swagger.json");
 const { connectRabbitMQ, onChannelReady } = require("./utils/rabbitmq");
 const { initOperationMessaging } = require("./events/operationPublisher");
 const { startOperationConsumers } = require("./events/operationConsumer");
+const client = require('prom-client');
+client.collectDefaultMetrics();
+
+const crypto = require('crypto');
 
 // App Routes
 const purchasesRoutes = require("./routes/purchasesRoutes");
@@ -22,6 +26,25 @@ app.use("/", express.static(path.join(__dirname, "../static")));
 //access api documentation
 app.use("/doc", express.static(path.join(__dirname, "../static/doc")));
 app.use("/apidoc", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+app.use('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+// Expose the metrics endpoint
+app.get('/metrics', async (req, res) => {
+  res.setHeader('Content-Type', client.register.contentType);
+  res.send(await client.register.metrics());
+});
+
+// Add this to your routes
+app.get('/stress', (req, res) => {
+  const end = Date.now() + 5000;
+  while (Date.now() < end) {
+    crypto.pbkdf2Sync('pass', 'salt', 1000, 64, 'sha512');
+  }
+  res.send("CPU stressed");
+});
 
 //Connect to RabbitMQ and start consumers
 (async () => {
