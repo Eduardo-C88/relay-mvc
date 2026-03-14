@@ -4,10 +4,13 @@ const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('../static/swagger/swagger.json');
 const { connectRabbitMQ } = require("./utils/rabbitmq");
-const { initUserPublisher } = require("./events/userPublisher");
+const client = require('prom-client');
+client.collectDefaultMetrics();
 
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
+const crypto = require('crypto');
+
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/reputation', reputationRoutes);
 
 require('dotenv').config();
 
@@ -21,13 +24,35 @@ app.use('/', express.static(path.join(__dirname, '../static')));
 app.use('/doc', express.static(path.join(__dirname, '../static/doc')));
 app.use('/apidoc', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+
+// Health check endpoint
+app.use('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+// Metrics endpoint
+app.get('/metrics', async (req, res) => {
+  res.setHeader('Content-Type', client.register.contentType);
+  res.send(await client.register.metrics());
+});
+
+// Stress test endpoint
+app.get('/stress', (req, res) => {
+  const end = Date.now() + 5000;
+  while (Date.now() < end) {
+    crypto.pbkdf2Sync('pass', 'salt', 1000, 64, 'sha512');
+  }
+  res.send('CPU stressed');
+});
+
+
 // Connect to RabbitMQ
 (async () => {
     const channel = await connectRabbitMQ();
     await initUserPublisher(channel);
 })();
 
-app.use(authRoutes);
-app.use(userRoutes);
+const reviewRoutes = require('./routes/reviewRoutes');
+const reputationRoutes = require('./routes/reputationRoutes');
  
 module.exports = app;
